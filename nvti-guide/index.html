@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mario Productivity Tools</title>
+<title>NVTI TA Guide</title>
 
 <style>
 body {
@@ -26,30 +26,15 @@ header h1 {
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 900px;
   margin: auto;
-  padding: 30px;
-}
-
-.section-title {
-  margin-top: 40px;
-  margin-bottom: 15px;
-  color: #9fb7d9;
-  text-transform: uppercase;
-  font-size: 14px;
-  letter-spacing: 1px;
-}
-
-.grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  padding: 40px 20px;
+  text-align: center;
 }
 
 .card {
-  display: block;
-  width: 260px;
-  padding: 20px;
+  display: inline-block;
+  padding: 25px 30px;
   background: #1b2130;
   border-radius: 10px;
   text-decoration: none;
@@ -64,8 +49,21 @@ header h1 {
 }
 
 .icon {
-  font-size: 30px;
+  font-size: 40px;
   margin-bottom: 10px;
+}
+
+.back {
+  margin: 20px;
+}
+
+.back a {
+  text-decoration:none;
+  color:white;
+  background:#2f80ed;
+  padding:10px 15px;
+  border-radius:6px;
+  display:inline-block;
 }
 
 footer {
@@ -80,59 +78,27 @@ footer {
 
 <body>
 
+<div class="back">
+  <a href="../index.html">⬅ Back to Home</a>
+</div>
+
 <header>
-  <h1>Mario Productivity Tools</h1>
-  <p>Central hub for all tools</p>
+  <h1>NVTI Travel Authorization Guide</h1>
+  <p>Step-by-step instructions and resources</p>
 </header>
 
 <div class="container">
 
-  <!-- CASE MANAGEMENT -->
-  <div class="section-title">Case Management Tools</div>
-  <div class="grid">
-
-    <a class="card" href="case-notes-tool/">
-      <div class="icon">📝</div>
-      <h2>Case Note Generator</h2>
-      <p>Create audit-ready DVOP case notes.</p>
-    </a>
-
-    <a class="card" href="client-dashboard-tool/">
-      <div class="icon">📊</div>
-      <h2>Client Dashboard</h2>
-      <p>Track clients and follow-ups.</p>
-    </a>
-
-    <a class="card" href="monthly-report-tool/">
-      <div class="icon">📄</div>
-      <h2>Monthly Report Tool</h2>
-      <p>Create structured reports.</p>
-    </a>
-
-  </div>
-
-  <!-- STUDY / TRAINING -->
-  <div class="section-title">Training & Study Tools</div>
-  <div class="grid">
-
-    <a class="card" href="Biblestudy-tool/">
-      <div class="icon">📖</div>
-      <h2>Bible Study Tool</h2>
-      <p>Organize study notes and reflections.</p>
-    </a>
-
-    <a class="card" href="NVTI_TA_Guide.html">
-      <div class="icon">✈️</div>
-      <h2>NVTI TA Guide</h2>
-      <p>Step-by-step travel authorization guide.</p>
-    </a>
-
-  </div>
+  <a class="card" href="NVTI_TA_Guide.html">
+    <div class="icon">✈️</div>
+    <h2>Open NVTI TA Guide</h2>
+    <p>View the full travel authorization guide</p>
+  </a>
 
 </div>
 
 <footer>
-  Built with HTML | Hosted on GitHub Pages
+  NVTI Guide · Hosted on GitHub Pages
 </footer>
 
 </body>
