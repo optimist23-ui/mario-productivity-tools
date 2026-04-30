@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chore Planner</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    background: #f2f2f7;
+    color: #1c1c1e;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .subtitle { font-size: 15px; color: #6e6e73; margin-bottom: 28px; }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .card h2 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6e6e73;
+    margin-bottom: 14px;
+  }
+
+  .card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1c1c1e;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .chip {
+    border: 1.5px solid #e5e5ea;
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    background: #f9f9fb;
+    transition: all 0.15s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .chip:hover { border-color: #c7c7cc; background: #f2f2f7; }
+
+  .chip.active {
+    background: #007aff;
+    border-color: #007aff;
+    color: #fff;
+  }
+
+  .chip.room-chip.active { background: #5856d6; border-color: #5856d6; }
+  .chip.task-chip.active { background: #ff9500; border-color: #ff9500; }
+
+  /* Room chips grid */
+  .room-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .room-chip-card {
+    border: 2px solid #e5e5ea;
+    border-radius: 12px;
+    padding: 12px 10px;
+    cursor: pointer;
+    text-align: center;
+    background: #f9f9fb;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .room-chip-card:hover { border-color: #c7c7cc; background: #f2f2f7; }
+
+  .room-chip-card.active {
+    border-color: #5856d6;
+    background: #f0effe;
+  }
+
+  .room-chip-card .room-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+  .room-chip-card .room-name { font-size: 12px; font-weight: 600; color: #1c1c1e; }
+  .room-chip-card.active .room-name { color: #5856d6; }
+
+  /* Task type chips */
+  .task-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .task-chip-card {
+    border: 2px solid #e5e5ea;
+    border-radius: 12px;
+    padding: 11px 14px;
+    cursor: pointer;
+    background: #f9f9fb;
+    transition: all 0.15s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .task-chip-card:hover { border-color: #c7c7cc; background: #f2f2f7; }
+
+  .task-chip-card.active {
+    border-color: #ff9500;
+    background: #fff8ec;
+  }
+
+  .task-chip-card .task-icon { font-size: 20px; flex-shrink: 0; }
+  .task-chip-card .task-name { font-size: 13px; font-weight: 600; color: #1c1c1e; }
+  .task-chip-card.active .task-name { color: #c97000; }
+
+  /* Fields */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: #3c3c43; }
+  .field input, .field select, .field textarea {
+    border: 1.5px solid #e5e5ea; border-radius: 10px; padding: 9px 12px;
+    font-size: 15px; font-family: inherit; color: #1c1c1e; background: #fff;
+    outline: none; transition: border 0.15s; width: 100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: #5856d6; }
+  .field textarea { resize: vertical; min-height: 80px; }
+
+  .field-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .field-header label { font-size: 13px; font-weight: 500; color: #3c3c43; }
+
+  /* Polish btn */
+  .polish-btn {
+    background: none; border: 1.5px solid #e5e5ea; border-radius: 8px;
+    padding: 3px 9px; font-size: 11px; font-weight: 600; color: #6e6e73;
+    cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap;
+  }
+  .polish-btn:hover { border-color: #af52de; color: #af52de; background: #f5eeff; }
+  .polish-btn.done { border-color: #34c759; color: #34c759; }
+
+  /* Priority chips */
+  .priority-chips .chip { font-size: 13px; }
+  .chip.pri-low.active   { background: #34c759; border-color: #34c759; }
+  .chip.pri-med.active   { background: #ff9500; border-color: #ff9500; }
+  .chip.pri-high.active  { background: #ff3b30; border-color: #ff3b30; }
+
+  /* Divider */
+  .divider { height: 1px; background: #e5e5ea; margin: 14px 0; }
+
+  /* Suggest / Add buttons */
+  .btn-row { display: flex; gap: 10px; margin-top: 4px; }
+
+  .suggest-btn {
+    flex: 1;
+    background: #5856d6;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .suggest-btn:hover { background: #4745b8; }
+  .suggest-btn:active { transform: scale(0.98); }
+
+  .add-more-btn {
+    flex: 1;
+    background: #34c759;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: none;
+  }
+  .add-more-btn:hover { background: #2aad4e; }
+  .add-more-btn:active { transform: scale(0.98); }
+
+  .clear-btn {
+    background: none;
+    border: 1.5px solid #ff3b30;
+    color: #ff3b30;
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .clear-btn:hover { background: #fff0ef; }
+
+  /* Added badge on room/task cards */
+  .room-chip-card.added { opacity: 0.45; }
+  .room-chip-card.added .room-name::after { content: ' ✓'; color: #34c759; }
+
+  /* Toast */
+  .toast {
+    display: none;
+    background: #34c759;
+    color: #fff;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .toast.show { display: block; }
+  .toast.warn { background: #ff9500; }
+
+  /* Generate button */
+  .generate-btn {
+    width: 100%;
+    background: #007aff;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 17px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 10px;
+  }
+  .generate-btn:hover { background: #0066d6; }
+  .generate-btn:active { transform: scale(0.98); }
+
+  .polish-all-btn {
+    width: 100%; background: #f5eeff; color: #af52de; border: 1.5px solid #ddb8f8;
+    border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all 0.15s; margin-bottom: 10px;
+  }
+  .polish-all-btn:hover { background: #ecdeff; }
+
+  .copy-btn {
+    width: 100%; margin-top: 12px; background: #34c759; color: #fff; border: none;
+    border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: background 0.15s;
+  }
+  .copy-btn:hover { background: #2aad4e; }
+  .copy-btn.copied { background: #636366; }
+
+  /* App export */
+  .export-section { margin-top: 16px; }
+  .export-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #8e8e93; margin-bottom: 10px; }
+  .notes-btn {
+    width: 100%; background: #fff9db; color: #7a5800; border: 1.5px solid #f0d060;
+    border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .notes-btn:hover { background: #fff3b0; border-color: #d4aa00; }
+  .notes-btn:active { transform: scale(0.98); }
+  .export-hint { font-size: 11px; color: #8e8e93; margin-top: 8px; text-align: center; line-height: 1.5; }
+
+  /* Chore checklist */
+  #chore-checklist-section { display: none; }
+
+  .room-group { margin-bottom: 16px; }
+  .room-group-header {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #5856d6;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .chore-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f9f9fb;
+    border-radius: 10px;
+    border: 1.5px solid #e5e5ea;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 6px;
+  }
+
+  .chore-item:hover { border-color: #c7c7cc; }
+  .chore-item.checked { background: #f0fdf4; border-color: #34c759; }
+  .chore-item.checked .chore-text { text-decoration: line-through; color: #636366; }
+
+  .chore-item input[type="checkbox"] {
+    width: 18px; height: 18px; cursor: pointer; accent-color: #34c759; flex-shrink: 0; margin-top: 1px;
+  }
+
+  .chore-text { font-size: 14px; font-weight: 500; line-height: 1.4; flex: 1; }
+  .chore-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .tag-clean    { background: #e3f0ff; color: #0055bb; }
+  .tag-organize { background: #fff3e0; color: #b06000; }
+  .tag-throwaway{ background: #fdecea; color: #c0392b; }
+  .tag-wash     { background: #e8f5fe; color: #007aff; }
+  .tag-fold     { background: #f0effe; color: #5856d6; }
+  .tag-iron     { background: #fff0f6; color: #c0006a; }
+  .tag-sort     { background: #e8fdf0; color: #1a8a47; }
+  .tag-sweep    { background: #f5f5f5; color: #444; }
+  .tag-vacuum   { background: #fef9e7; color: #9a7d0a; }
+  .tag-wipe     { background: #e8fffe; color: #007070; }
+
+  /* Output */
+  .output-box {
+    background: #f9f9fb; border: 1.5px solid #e5e5ea; border-radius: 12px;
+    padding: 16px; font-size: 13px; line-height: 1.75; white-space: pre-wrap;
+    font-family: "SF Mono", "Menlo", monospace; color: #1c1c1e;
+    max-height: 480px; overflow-y: auto;
+  }
+
+  .group-toggle {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 9px;
+    border: 1.5px solid #e5e5ea;
+    border-radius: 10px;
+    background: #f9f9fb;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    color: #3c3c43;
+  }
+
+  .toggle-btn.active { background: #5856d6; border-color: #5856d6; color: #fff; }
+
+  .select-all-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .select-all-row span { font-size: 13px; color: #8e8e93; }
+
+  .small-btn {
+    background: none;
+    border: 1.5px solid #e5e5ea;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5856d6;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .small-btn:hover { border-color: #5856d6; background: #f0effe; }
+
+  .empty-state {
+    text-align: center;
+    padding: 24px;
+    color: #8e8e93;
+    font-size: 14px;
+  }
+
+  @media (max-width: 400px) {
+    .room-grid { grid-template-columns: repeat(2, 1fr); }
+    .task-grid { grid-template-columns: 1fr; }
+    .export-btns { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🧹 Chore Planner</h1>
+<p class="subtitle">Pick your rooms and task types → get a ready-to-copy chore list.</p>
+
+<!-- Step 1: Locations -->
+<div class="card">
+  <h2>Step 1 — Where are you cleaning? <span style="font-weight:400;color:#8e8e93">(pick any)</span></h2>
+  <div class="room-grid" id="room-grid">
+    <div class="room-chip-card active" data-room="kitchen" onclick="toggleRoom(this)">
+      <span class="room-icon">🍳</span><div class="room-name">Kitchen</div>
+    </div>
+    <div class="room-chip-card" data-room="bedroom" onclick="toggleRoom(this)">
+      <span class="room-icon">🛏</span><div class="room-name">Bedroom</div>
+    </div>
+    <div class="room-chip-card" data-room="bathroom" onclick="toggleRoom(this)">
+      <span class="room-icon">🚿</span><div class="room-name">Bathroom</div>
+    </div>
+    <div class="room-chip-card" data-room="laundry" onclick="toggleRoom(this)">
+      <span class="room-icon">👕</span><div class="room-name">Laundry</div>
+    </div>
+    <div class="room-chip-card" data-room="garage" onclick="toggleRoom(this)">
+      <span class="room-icon">🚗</span><div class="room-name">Garage</div>
+    </div>
+    <div class="room-chip-card" data-room="living" onclick="toggleRoom(this)">
+      <span class="room-icon">🛋</span><div class="room-name">Living Room</div>
+    </div>
+    <div class="room-chip-card" data-room="pantry" onclick="toggleRoom(this)">
+      <span class="room-icon">📦</span><div class="room-name">Pantry / Storage</div>
+    </div>
+    <div class="room-chip-card" data-room="office" onclick="toggleRoom(this)">
+      <span class="room-icon">🖥</span><div class="room-name">Office / Desk</div>
+    </div>
+    <div class="room-chip-card" data-room="yard" onclick="toggleRoom(this)">
+      <span class="room-icon">🌿</span><div class="room-name">Yard / Outside</div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2: Task types -->
+<div class="card">
+  <h2>Step 2 — What type of tasks? <span style="font-weight:400;color:#8e8e93">(pick any)</span></h2>
+  <div class="task-grid" id="task-grid">
+    <div class="task-chip-card active" data-task="clean" onclick="toggleTask(this)">
+      <span class="task-icon">🧽</span><div class="task-name">Clean</div>
+    </div>
+    <div class="task-chip-card" data-task="organize" onclick="toggleTask(this)">
+      <span class="task-icon">📦</span><div class="task-name">Organize</div>
+    </div>
+    <div class="task-chip-card" data-task="throwaway" onclick="toggleTask(this)">
+      <span class="task-icon">🗑</span><div class="task-name">Throw Away / Declutter</div>
+    </div>
+    <div class="task-chip-card" data-task="wash" onclick="toggleTask(this)">
+      <span class="task-icon">🫧</span><div class="task-name">Wash</div>
+    </div>
+    <div class="task-chip-card" data-task="fold" onclick="toggleTask(this)">
+      <span class="task-icon">👕</span><div class="task-name">Fold</div>
+    </div>
+    <div class="task-chip-card" data-task="iron" onclick="toggleTask(this)">
+      <span class="task-icon">🌡</span><div class="task-name">Iron</div>
+    </div>
+    <div class="task-chip-card" data-task="sort" onclick="toggleTask(this)">
+      <span class="task-icon">📂</span><div class="task-name">Sort</div>
+    </div>
+    <div class="task-chip-card" data-task="sweep" onclick="toggleTask(this)">
+      <span class="task-icon">🧹</span><div class="task-name">Sweep / Mop</div>
+    </div>
+    <div class="task-chip-card" data-task="vacuum" onclick="toggleTask(this)">
+      <span class="task-icon">🌀</span><div class="task-name">Vacuum</div>
+    </div>
+    <div class="task-chip-card" data-task="wipe" onclick="toggleTask(this)">
+      <span class="task-icon">🧴</span><div class="task-name">Wipe Down</div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3: Options -->
+<div class="card">
+  <h2>Step 3 — Options</h2>
+
+  <div class="field">
+    <label>Date</label>
+    <input type="date" id="chore-date">
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="field">
+    <label>Priority</label>
+    <div class="chips priority-chips" style="margin-top:4px" id="priority-chips">
+      <span class="chip pri-low"  onclick="toggleChip(this,'priority')">🟢 Low — whenever</span>
+      <span class="chip pri-med active" onclick="toggleChip(this,'priority')">🟡 Medium — today</span>
+      <span class="chip pri-high" onclick="toggleChip(this,'priority')">🔴 High — must do</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="field">
+    <label>Time available</label>
+    <div class="chips" style="margin-top:4px" id="time-chips">
+      <span class="chip" onclick="toggleChip(this,'time')">⚡ 30–60 min</span>
+      <span class="chip active" onclick="toggleChip(this,'time')">🕑 Half day</span>
+      <span class="chip" onclick="toggleChip(this,'time')">☀️ Full day</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="field">
+    <label>Who's doing it?</label>
+    <div class="chips" style="margin-top:4px" id="who-chips">
+      <span class="chip active" onclick="toggleChip(this,'who')">🙋 Just me</span>
+      <span class="chip" onclick="toggleChip(this,'who')">👫 Shared</span>
+      <span class="chip" onclick="toggleChip(this,'who')">👨‍👩‍👧 Family project</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="field">
+    <label>Group output by</label>
+    <div class="group-toggle" style="margin-top:4px">
+      <button class="toggle-btn active" id="group-room-btn" onclick="setGroupBy('room')">🏠 Room</button>
+      <button class="toggle-btn" id="group-task-btn" onclick="setGroupBy('task')">📋 Task type</button>
+    </div>
+  </div>
+</div>
+
+<!-- Suggest / Add buttons -->
+<div class="btn-row">
+  <button class="suggest-btn" onclick="suggestChores(false)">💡 Start Chore List</button>
+  <button class="add-more-btn" id="add-more-btn" onclick="suggestChores(true)">➕ Add to List</button>
+</div>
+<div class="toast" id="add-toast"></div>
+
+<!-- Chore checklist -->
+<div class="card" id="chore-checklist-section" style="margin-top:14px; display:none">
+  <h2>Your Chore List — Check Off What You're Doing</h2>
+
+  <div class="select-all-row">
+    <span id="chore-count-label">0 chores</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="small-btn" onclick="checkAll(true)">✅ All</button>
+      <button class="small-btn" onclick="checkAll(false)">☐ None</button>
+      <button class="clear-btn" onclick="clearAll()">🗑 Clear</button>
+    </div>
+  </div>
+
+  <div id="chore-list-container"></div>
+
+  <div class="divider"></div>
+
+  <div class="field">
+    <div class="field-header">
+      <label>Add any chores I missed</label>
+      <button class="polish-btn" onclick="polishField('custom-chores',this)">✏️ Polish</button>
+    </div>
+    <textarea id="custom-chores" placeholder="e.g.&#10;Clean behind refrigerator&#10;Wipe light switches throughout house&#10;Scrub grout in master bath"></textarea>
+  </div>
+</div>
+
+<!-- Polish All + Generate -->
+<div id="generate-area" style="display:none">
+  <button class="polish-all-btn" onclick="polishAll()" style="margin-top:14px">✏️ Polish All Text</button>
+  <button class="generate-btn" onclick="generateChoreList()">📋 Generate Chore List</button>
+</div>
+
+<!-- Output -->
+<div class="card" id="output-section" style="display:none; margin-top:16px">
+  <h2>Chore List — Ready to Copy</h2>
+  <div class="output-box" id="output-text"></div>
+  <button class="copy-btn" id="copy-btn" onclick="copyOutput()">📋 Copy to Clipboard</button>
+
+  <div class="export-section">
+    <div class="export-label">Send to Apple Notes</div>
+    <button class="notes-btn" onclick="sendToAppleNotes()">
+      🗒 Open in Apple Notes
+    </button>
+    <div class="export-hint">Copies a formatted note with #chores tag and checklist — paste with ⌘V (Mac) or tap &amp; hold → Paste (iPhone/iPad)</div>
+  </div>
+</div>
+
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CHORE DATABASE — Room × Task type
+// ══════════════════════════════════════════════════════════
+const CHORE_DB = {
+  kitchen: {
+    clean:     ['Wipe down all countertops','Clean stovetop and burners','Clean microwave inside and out','Scrub and sanitize the sink','Wipe refrigerator interior and shelves','Clean oven (inside and out)'],
+    wash:      ['Wash dishes or run the dishwasher','Wash dish towels and sponges','Mop the kitchen floor','Wash refrigerator drip trays'],
+    organize:  ['Organize pantry shelves by category','Arrange the spice rack or cabinet','Tidy the junk drawer','Organize pots, pans, and lids cabinet','Reorganize the refrigerator by section'],
+    throwaway: ['Clear all expired pantry items','Toss old leftovers and open containers','Remove broken or unused kitchen gadgets','Recycle old plastic bags and packaging'],
+    sweep:     ['Sweep kitchen floor','Mop kitchen floor','Sweep under the refrigerator and stove'],
+    wipe:      ['Wipe down cabinet fronts and handles','Wipe all appliance exteriors','Clean the range hood and filter','Wipe light switches and outlets'],
+    sort:      ['Sort and match food storage containers and lids','Sort plasticware — keep only complete sets','Sort cleaning supplies under sink'],
+    vacuum:    ['Vacuum kitchen mat or rug','Vacuum refrigerator coils (if accessible)'],
+  },
+  bedroom: {
+    clean:     ['Dust all surfaces — nightstands, dresser, shelves','Clean under the bed','Wipe down light fixtures and ceiling fan','Clean bedroom windows and sills'],
+    organize:  ['Organize the closet — hang, fold, and group','Tidy and reorganize drawers','Arrange items on nightstand and dresser','Organize under-bed storage bins'],
+    throwaway: ['Declutter old or outgrown clothes — donate or trash','Clear nightstand clutter — old receipts, junk','Remove items that don\'t belong in the bedroom','Toss worn-out accessories'],
+    fold:      ['Fold all clean clothes and put them away','Refold and restack folded clothes in drawers','Fold and store extra blankets or linens'],
+    iron:      ['Iron work clothes and shirts for the week','Iron dress pants and slacks','Iron pillowcases and linens','Touch up any wrinkled garments'],
+    sort:      ['Sort clothes into keep / donate / trash piles','Sort accessories — belts, ties, scarves, jewelry','Sort seasonal clothing and store off-season items'],
+    sweep:     ['Sweep bedroom floor','Mop hard bedroom floor'],
+    vacuum:    ['Vacuum bedroom carpet or area rug','Vacuum under the bed','Vacuum mattress (flip if needed)'],
+    wipe:      ['Wipe nightstand and dresser surface','Wipe mirror and glass surfaces','Wipe door handles and light switches'],
+    wash:      ['Strip and wash bed sheets and pillowcases','Wash duvet cover and throw blankets','Wash bedroom curtains or blinds'],
+  },
+  bathroom: {
+    clean:     ['Scrub toilet bowl and wipe exterior','Scrub shower walls and bathtub','Clean sink, faucet, and drain','Wipe and polish mirror','Scrub tile grout'],
+    wash:      ['Wash and replace all bath towels','Wash bath mat','Launder shower curtain or liner','Wash hand towels'],
+    organize:  ['Organize the under-sink cabinet','Arrange medicine cabinet — group by use','Tidy toiletries and products on countertop','Organize cleaning supplies'],
+    throwaway: ['Toss expired medications and products','Clear out empty or nearly empty bottles','Remove duplicates and products you don\'t use','Recycle old packaging'],
+    sweep:     ['Sweep and mop bathroom floor','Sweep behind the toilet'],
+    wipe:      ['Wipe countertop and backsplash','Wipe light switches and door handle','Wipe toilet exterior top to bottom','Clean exhaust fan cover'],
+    sort:      ['Sort toiletries — keep only what you actively use','Sort cleaning supplies and refill as needed'],
+    vacuum:    ['Vacuum bathroom rug or mat'],
+  },
+  laundry: {
+    wash:      ['Wash darks (cold water)','Wash lights and whites (warm water)','Wash delicates on gentle cycle','Wash bed sheets and pillowcases','Wash towels and bath mats','Wash reusable bags and totes'],
+    fold:      ['Fold and sort T-shirts and tops','Fold pants and jeans','Fold and stack towels and washcloths','Fold and put away bedding','Pair and put away socks'],
+    iron:      ['Iron dress shirts (collar, cuffs, body)','Iron dress pants and slacks','Iron linen shirts or blouses','Iron pillowcases and duvet cover','Touch up any creased garments'],
+    sort:      ['Sort dirty laundry into darks, lights, whites','Sort by fabric — delicates separate from heavy items','Sort clean laundry by room or person','Sort clothes to donate vs. keep'],
+    organize:  ['Organize laundry room shelves and baskets','Arrange detergents, softeners, and stain removers','Wipe down washer and dryer exterior','Clear the lint trap and dryer duct area'],
+    throwaway: ['Toss worn-out socks and underwear beyond repair','Remove clothing with permanent stains or damage','Clear old or unused laundry products'],
+    clean:     ['Clean washing machine drum (run cleaning cycle)','Wipe dryer interior drum','Clean lint trap thoroughly','Wipe down laundry room surfaces'],
+    wipe:      ['Wipe washer and dryer control panels','Wipe laundry room shelves','Wipe laundry sink'],
+  },
+  garage: {
+    organize:  ['Organize the tool wall or toolbox by type','Arrange shelving — group like items together','Organize sports equipment and gear','Label bins and shelving sections','Set up dedicated zones: tools, seasonal, sports, auto'],
+    throwaway: ['Declutter broken or unused tools','Clear old paint cans and dried-out products','Remove cardboard boxes and packaging','Toss items not touched in over a year','Dispose of old chemicals safely'],
+    sweep:     ['Sweep the entire garage floor','Clear cobwebs from corners and rafters','Blow out dust from shelving and corners'],
+    sort:      ['Sort items into keep / donate / trash piles','Sort seasonal decorations and label bins','Sort hardware — screws, bolts, nails into labeled containers'],
+    clean:     ['Clean the workbench surface','Wipe down shelving units','Clean garage door tracks and lubricate hinges'],
+    wipe:      ['Wipe down appliances stored in garage','Wipe exterior of storage bins and boxes'],
+  },
+  living: {
+    clean:     ['Dust all surfaces — shelves, furniture, frames','Clean TV screen and all electronics','Wipe coffee table, side tables, entertainment unit','Clean windows and window sills'],
+    vacuum:    ['Vacuum carpet and area rugs','Vacuum sofa, chair cushions, and under cushions','Vacuum under furniture','Vacuum baseboards'],
+    organize:  ['Organize bookshelf — dust and realign','Tidy entertainment center and manage cables','Arrange throw pillows and blankets','Organize remote controls, chargers, and accessories'],
+    throwaway: ['Clear old magazines, catalogs, and newspapers','Remove unused decor that\'s cluttering the space','Toss broken or worn throw pillows or blankets'],
+    wipe:      ['Wipe down baseboards','Wipe light switches, remotes, and outlets','Wipe window sills inside and out'],
+    sort:      ['Sort books — donate ones you won\'t re-read','Sort media (games, DVDs, cables)'],
+    sweep:     ['Sweep or dry-mop hardwood or tile floor','Mop living room floor'],
+    wash:      ['Wash throw blankets and slipcovers','Wash decorative pillow covers'],
+  },
+  pantry: {
+    organize:  ['Group items by category (cans, snacks, grains, baking)','Use bins or baskets to contain groups','Label shelf sections and containers','Decant bulk items into airtight containers'],
+    throwaway: ['Remove all expired or stale items','Toss damaged or open packaging','Clear overstock — donate extras to food bank'],
+    sort:      ['Sort by expiration date (oldest to front)','Sort by meal type or use frequency'],
+    clean:     ['Wipe all pantry shelves','Vacuum or sweep pantry floor','Wipe down the pantry door and handle'],
+    wipe:      ['Wipe all shelving from top to bottom','Wipe exterior of bins, jars, and containers'],
+  },
+  office: {
+    organize:  ['Clear and organize the desk surface','File or scan all loose papers','Arrange cables and chargers with ties or clips','Organize desk drawers — one purpose per drawer'],
+    throwaway: ['Shred or recycle old documents','Clear broken or unused office supplies','Toss old notes, junk mail, and empty packaging'],
+    clean:     ['Dust monitor, keyboard, mouse, and peripherals','Vacuum or sweep under the desk and chair','Dust bookshelves and storage'],
+    sort:      ['Sort documents into labeled folders or binders','Sort supplies — only keep what you use regularly','Sort reference materials and archive old ones'],
+    wipe:      ['Wipe desk surface','Wipe monitor and all peripherals','Wipe chair armrests and seat'],
+    vacuum:    ['Vacuum office carpet or rug','Vacuum chair cushion'],
+  },
+  yard: {
+    clean:     ['Clear leaves and debris from yard','Sweep porch, patio, or deck','Clean outdoor furniture','Rinse outdoor surfaces with hose'],
+    organize:  ['Organize shed or outdoor storage area','Arrange patio furniture into a clean layout','Store seasonal or unused items properly'],
+    throwaway: ['Remove dead plants and clear dried-out pots','Clear old garden pots, tools, and waste','Toss broken outdoor furniture or decor'],
+    sweep:     ['Sweep driveway and front walkway','Sweep porch or deck','Clear storm drains near the house'],
+    sort:      ['Sort garden tools — clean and hang properly','Sort outdoor storage bins','Sort seasonal decor for storage'],
+    wipe:      ['Wipe down outdoor furniture','Clean BBQ grill and grates','Wipe outdoor light fixtures'],
+    wash:      ['Wash outdoor furniture covers','Wash outdoor rugs or mats','Power wash patio or driveway if needed'],
+  }
+};
+
+const ROOM_META = {
+  kitchen: { icon: '🍳', label: 'Kitchen' },
+  bedroom: { icon: '🛏', label: 'Bedroom' },
+  bathroom:{ icon: '🚿', label: 'Bathroom' },
+  laundry: { icon: '👕', label: 'Laundry' },
+  garage:  { icon: '🚗', label: 'Garage' },
+  living:  { icon: '🛋', label: 'Living Room' },
+  pantry:  { icon: '📦', label: 'Pantry / Storage' },
+  office:  { icon: '🖥', label: 'Office / Desk' },
+  yard:    { icon: '🌿', label: 'Yard / Outside' },
+};
+
+const TASK_META = {
+  clean:     { icon: '🧽', label: 'Clean' },
+  organize:  { icon: '📦', label: 'Organize' },
+  throwaway: { icon: '🗑', label: 'Throw Away' },
+  wash:      { icon: '🫧', label: 'Wash' },
+  fold:      { icon: '👕', label: 'Fold' },
+  iron:      { icon: '🌡', label: 'Iron' },
+  sort:      { icon: '📂', label: 'Sort' },
+  sweep:     { icon: '🧹', label: 'Sweep / Mop' },
+  vacuum:    { icon: '🌀', label: 'Vacuum' },
+  wipe:      { icon: '🧴', label: 'Wipe Down' },
+};
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let groupBy = 'room';
+let suggestedChores = [];
+let addedCombos = new Set();
+
+document.getElementById('chore-date').valueAsDate = new Date();
+
+// ══════════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════════
+function toggleRoom(el) { el.classList.toggle('active'); }
+function toggleTask(el) { el.classList.toggle('active'); }
+function setGroupBy(mode) {
+  groupBy = mode;
+  document.getElementById('group-room-btn').classList.toggle('active', mode === 'room');
+  document.getElementById('group-task-btn').classList.toggle('active', mode === 'task');
+}
+
+function toggleChip(el, group) {
+  document.querySelectorAll(`#${group}-chips .chip`).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function getActiveChip(groupId) {
+  const a = document.querySelector(`#${groupId}-chips .chip.active`);
+  return a ? a.textContent.trim() : '';
+}
+
+function getSelectedRooms() {
+  return [...document.querySelectorAll('#room-grid .room-chip-card.active')].map(el => el.dataset.room);
+}
+
+function getSelectedTasks() {
+  return [...document.querySelectorAll('#task-grid .task-chip-card.active')].map(el => el.dataset.task);
+}
+
+// ══════════════════════════════════════════════════════════
+// GRAMMAR / POLISH
+// ══════════════════════════════════════════════════════════
+const TYPOS = {
+  'teh':'the','hte':'the','adn':'and','taht':'that','recieve':'receive',
+  'wiht':'with','tomorow':'tomorrow','definately':'definitely','grammer':'grammar',
+  'dont':"don't",'cant':"can't",'wont':"won't",'isnt':"isn't",'im':"I'm",'alot':'a lot'
+};
+
+function polishText(raw) {
+  if (!raw || !raw.trim()) return raw;
+  return raw.split('\n').map(line => {
+    let t = line.trim();
+    if (!t) return '';
+    t = t.replace(/\s{2,}/g, ' ');
+    t = t.replace(/\b(i)\b/g, 'I');
+    t = t.replace(/\b(\w+)\b/g, w => {
+      const l = w.toLowerCase();
+      return (TYPOS[l] && w === l) ? TYPOS[l] : w;
+    });
+    t = t.charAt(0).toUpperCase() + t.slice(1);
+    t = t.replace(/([.!?])\s+([a-z])/g, (m, p, c) => p + ' ' + c.toUpperCase());
+    const words = t.split(/\s+/).filter(Boolean);
+    if (words.length >= 3 && !/[.!?,;:\-–—]$/.test(t[t.length - 1])) t += '.';
+    return t;
+  }).join('\n');
+}
+
+function polishField(id, btn) {
+  const el = document.getElementById(id);
+  if (!el || !el.value.trim()) return;
+  el.value = polishText(el.value);
+  if (btn) {
+    btn.textContent = '✅ Done'; btn.classList.add('done');
+    setTimeout(() => { btn.textContent = '✏️ Polish'; btn.classList.remove('done'); }, 2000);
+  }
+}
+
+function polishAll() {
+  ['custom-chores'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value.trim()) el.value = polishText(el.value);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// SUGGEST CHORES
+// ══════════════════════════════════════════════════════════
+function suggestChores(append) {
+  const rooms = getSelectedRooms();
+  const tasks = getSelectedTasks();
+  const timeSlot = getActiveChip('time');
+
+  if (rooms.length === 0) { showToast('Pick at least one room first.', true); return; }
+  if (tasks.length === 0) { showToast('Pick at least one task type first.', true); return; }
+
+  let maxPerCell = 99;
+  if (timeSlot.includes('30')) maxPerCell = 2;
+  else if (timeSlot.includes('Half')) maxPerCell = 4;
+
+  if (!append) {
+    suggestedChores = [];
+    addedCombos = new Set();
+    document.querySelectorAll('#room-grid .room-chip-card').forEach(el => el.classList.remove('added'));
+  }
+
+  let newCount = 0;
+  let skippedCombos = [];
+
+  rooms.forEach(room => {
+    tasks.forEach(task => {
+      const key = `${room}|${task}`;
+      const db = CHORE_DB[room];
+      if (!db || !db[task]) return;
+
+      if (append && addedCombos.has(key)) {
+        const rMeta = ROOM_META[room] || { label: room };
+        const tMeta = TASK_META[task] || { label: task };
+        skippedCombos.push(`${rMeta.label} → ${tMeta.label}`);
+        return;
+      }
+
+      addedCombos.add(key);
+      db[task].slice(0, maxPerCell).forEach(text => {
+        suggestedChores.push({ room, task, text, id: `${room}-${task}-${Math.random().toString(36).slice(2)}` });
+        newCount++;
+      });
+    });
+
+    const card = document.querySelector(`#room-grid .room-chip-card[data-room="${room}"]`);
+    if (card && append) card.classList.add('added');
+  });
+
+  if (append) {
+    document.querySelectorAll('#room-grid .room-chip-card.active').forEach(el => el.classList.remove('active'));
+  }
+
+  renderChecklist();
+  document.getElementById('chore-checklist-section').style.display = 'block';
+  document.getElementById('generate-area').style.display = 'block';
+  document.getElementById('add-more-btn').style.display = 'flex';
+
+  if (append) {
+    if (newCount > 0 && skippedCombos.length > 0) {
+      showToast(`✅ Added ${newCount} chores. Skipped already-added: ${skippedCombos.join(', ')}.`, false);
+    } else if (newCount > 0) {
+      showToast(`✅ ${newCount} chores added to your list — ${suggestedChores.length} total.`, false);
+    } else {
+      showToast(`⚠️ All selected combos already in your list. Try different rooms or tasks.`, true);
+    }
+  }
+
+  if (!append) {
+    setTimeout(() => document.getElementById('chore-checklist-section').scrollIntoView({behavior:'smooth',block:'start'}), 100);
+  } else {
+    setTimeout(() => document.getElementById('chore-checklist-section').scrollIntoView({behavior:'smooth',block:'end'}), 100);
+  }
+}
+
+function showToast(msg, warn) {
+  const t = document.getElementById('add-toast');
+  t.textContent = msg;
+  t.className = `toast show${warn ? ' warn' : ''}`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function clearAll() {
+  if (!confirm('Clear the entire chore list and start over?')) return;
+  suggestedChores = [];
+  addedCombos = new Set();
+  document.querySelectorAll('#room-grid .room-chip-card').forEach(el => el.classList.remove('added'));
+  document.getElementById('chore-checklist-section').style.display = 'none';
+  document.getElementById('generate-area').style.display = 'none';
+  document.getElementById('output-section').style.display = 'none';
+  document.getElementById('add-more-btn').style.display = 'none';
+  document.getElementById('custom-chores').value = '';
+}
+
+function renderChecklist() {
+  const container = document.getElementById('chore-list-container');
+  container.innerHTML = '';
+
+  if (suggestedChores.length === 0) {
+    container.innerHTML = '<div class="empty-state">No chores matched your selections. Try adding more rooms or task types.</div>';
+    document.getElementById('chore-count-label').textContent = '0 chores';
+    return;
+  }
+
+  document.getElementById('chore-count-label').textContent = `${suggestedChores.length} chore${suggestedChores.length === 1 ? '' : 's'} suggested`;
+
+  if (groupBy === 'room') {
+    const rooms = [...new Set(suggestedChores.map(c => c.room))];
+    rooms.forEach(room => {
+      const meta = ROOM_META[room] || { icon: '🏠', label: room };
+      const group = document.createElement('div');
+      group.className = 'room-group';
+      group.innerHTML = `<div class="room-group-header">${meta.icon} ${meta.label}</div>`;
+      suggestedChores.filter(c => c.room === room).forEach(chore => {
+        group.appendChild(makeChoreItem(chore));
+      });
+      container.appendChild(group);
+    });
+  } else {
+    const tasks = [...new Set(suggestedChores.map(c => c.task))];
+    tasks.forEach(task => {
+      const meta = TASK_META[task] || { icon: '✅', label: task };
+      const group = document.createElement('div');
+      group.className = 'room-group';
+      group.innerHTML = `<div class="room-group-header">${meta.icon} ${meta.label}</div>`;
+      suggestedChores.filter(c => c.task === task).forEach(chore => {
+        group.appendChild(makeChoreItem(chore));
+      });
+      container.appendChild(group);
+    });
+  }
+}
+
+function makeChoreItem(chore) {
+  const div = document.createElement('div');
+  div.className = 'chore-item checked';
+  div.dataset.choreId = chore.id;
+  div.onclick = function(e) {
+    if (e.target.tagName === 'INPUT') return;
+    const cb = this.querySelector('input');
+    cb.checked = !cb.checked;
+    this.classList.toggle('checked', cb.checked);
+  };
+
+  const meta = TASK_META[chore.task] || { label: chore.task };
+
+  div.innerHTML = `
+    <input type="checkbox" checked onclick="event.stopPropagation(); this.parentElement.classList.toggle('checked', this.checked)">
+    <span class="chore-text">${chore.text}</span>
+    <span class="chore-tag tag-${chore.task}">${meta.label}</span>
+  `;
+
+  return div;
+}
+
+function checkAll(state) {
+  document.querySelectorAll('.chore-item').forEach(item => {
+    const cb = item.querySelector('input[type="checkbox"]');
+    if (cb) { cb.checked = state; item.classList.toggle('checked', state); }
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// GENERATE PLAIN TEXT
+// ══════════════════════════════════════════════════════════
+function generateChoreList() {
+  const dateVal = document.getElementById('chore-date').value;
+  const priority = getActiveChip('priority');
+  const time = getActiveChip('time');
+  const who = getActiveChip('who');
+  const custom = document.getElementById('custom-chores').value.trim();
+
+  const dateStr = dateVal
+    ? new Date(dateVal + 'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})
+    : new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  const checked = [];
+  document.querySelectorAll('.chore-item').forEach(item => {
+    const cb = item.querySelector('input[type="checkbox"]');
+    if (cb && cb.checked) {
+      const choreId = item.dataset.choreId;
+      const chore = suggestedChores.find(c => c.id === choreId);
+      if (chore) checked.push(chore);
+    }
+  });
+
+  if (checked.length === 0 && !custom) { alert('Check off at least one chore first.'); return; }
+
+  let output = `━━━━━━━━━━━━━━━━━━━━━━━━\n🧹 CHORE LIST\n${dateStr}\n━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+  output += `\n🎯 Priority: ${priority}\n⏱ Time:     ${time}\n👤 Who:      ${who}\n`;
+
+  if (groupBy === 'room') {
+    const rooms = [...new Set(checked.map(c => c.room))];
+    rooms.forEach(room => {
+      const meta = ROOM_META[room] || { icon: '🏠', label: room };
+      output += `\n─────────────────────────\n${meta.icon}  ${meta.label.toUpperCase()}\n─────────────────────────\n`;
+      checked.filter(c => c.room === room).forEach(c => {
+        const tMeta = TASK_META[c.task] || { label: c.task };
+        output += `  ☐ [${tMeta.label}] ${c.text}\n`;
+      });
+    });
+  } else {
+    const tasks = [...new Set(checked.map(c => c.task))];
+    tasks.forEach(task => {
+      const meta = TASK_META[task] || { icon: '✅', label: task };
+      output += `\n─────────────────────────\n${meta.icon}  ${meta.label.toUpperCase()}\n─────────────────────────\n`;
+      checked.filter(c => c.task === task).forEach(c => {
+        const rMeta = ROOM_META[c.room] || { label: c.room };
+        output += `  ☐ [${rMeta.label}] ${c.text}\n`;
+      });
+    });
+  }
+
+  if (custom) {
+    output += `\n─────────────────────────\n📝  ADDITIONAL CHORES\n─────────────────────────\n`;
+    custom.split('\n').filter(l => l.trim()).forEach(l => {
+      output += `  ☐ ${l.trim()}\n`;
+    });
+  }
+
+  output += `\n─────────────────────────\nSUMMARY\n─────────────────────────\n`;
+  const totalRooms = [...new Set(checked.map(c => c.room))].length;
+  const totalTasks = checked.length + (custom ? custom.split('\n').filter(l=>l.trim()).length : 0);
+  output += `  • Total chores: ${totalTasks}\n`;
+  output += `  • Rooms covered: ${totalRooms}\n`;
+  output += `  • Time estimate: ${time}\n`;
+  output += `\n━━━━━━━━━━━━━━━━━━━━━━━━\nGenerated ${new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}\n━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+  document.getElementById('output-text').textContent = output;
+  document.getElementById('output-section').style.display = 'block';
+  document.getElementById('copy-btn').textContent = '📋 Copy to Clipboard';
+  document.getElementById('copy-btn').className = 'copy-btn';
+  setTimeout(() => document.getElementById('output-section').scrollIntoView({behavior:'smooth',block:'start'}), 100);
+}
+
+function copyOutput() {
+  const text = document.getElementById('output-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ Copied!';
+    btn.className = 'copy-btn copied';
+    setTimeout(() => { btn.textContent = '📋 Copy to Clipboard'; btn.className = 'copy-btn'; }, 2500);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// APP EXPORT — Apple Notes
+// ══════════════════════════════════════════════════════════
+function sendToAppleNotes() {
+  const anyChecked = document.querySelector('.chore-item input[type="checkbox"]:checked');
+  const customRaw = document.getElementById('custom-chores').value.trim();
+
+  if (!anyChecked && !customRaw) {
+    alert('Build your chore list first, then click Apple Notes.');
+    return;
+  }
+
+  // Collect checked chores
+  const checked = [];
+  document.querySelectorAll('.chore-item').forEach(item => {
+    const cb = item.querySelector('input[type="checkbox"]');
+    if (cb && cb.checked) {
+      const chore = suggestedChores.find(c => c.id === item.dataset.choreId);
+      if (chore) checked.push(chore);
+    }
+  });
+  const customLines = customRaw ? customRaw.split('\n').filter(l => l.trim()) : [];
+
+  // Build header metadata
+  const dateVal = document.getElementById('chore-date').value;
+  const dateStr = dateVal
+    ? new Date(dateVal + 'T12:00:00').toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'})
+    : new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  const priority = getActiveChip('priority');
+  const time     = getActiveChip('time');
+  const who      = getActiveChip('who');
+
+  // ── Build rich HTML ──────────────────────────────────────
+  // Apple Notes renders <ul data-apple-notes-task-list> as native todo checkboxes
+  // when pasted. Fall back to <ul><li> for other contexts.
+  const taskListOpen  = '<ul data-apple-notes-task-list="true">';
+  const taskListClose = '</ul>';
+  const taskItem = text => `<li data-apple-notes-task-item="true"><span data-apple-notes-task-item-checked="false"></span>${text}</li>`;
+
+  let html = `
+    <h1>🧹 Chore List</h1>
+    <p>${dateStr}</p>
+    <p><b>#chores</b></p>
+    <p>🎯 ${priority} &nbsp;·&nbsp; ⏱ ${time} &nbsp;·&nbsp; 👤 ${who}</p>
+    <br>
+  `;
+
+  if (groupBy === 'room') {
+    const rooms = [...new Set(checked.map(c => c.room))];
+    rooms.forEach(room => {
+      const meta = ROOM_META[room] || { icon: '🏠', label: room };
+      html += `<h2>${meta.icon} ${meta.label}</h2>${taskListOpen}`;
+      checked.filter(c => c.room === room).forEach(c => {
+        const tMeta = TASK_META[c.task] || { label: c.task };
+        html += taskItem(`${c.text} <i style="color:#8e8e93;font-size:0.85em">[${tMeta.label}]</i>`);
+      });
+      html += taskListClose;
+    });
+  } else {
+    const tasks = [...new Set(checked.map(c => c.task))];
+    tasks.forEach(task => {
+      const meta = TASK_META[task] || { icon: '✅', label: task };
+      html += `<h2>${meta.icon} ${meta.label}</h2>${taskListOpen}`;
+      checked.filter(c => c.task === task).forEach(c => {
+        const rMeta = ROOM_META[c.room] || { label: c.room };
+        html += taskItem(`${c.text} <i style="color:#8e8e93;font-size:0.85em">[${rMeta.label}]</i>`);
+      });
+      html += taskListClose;
+    });
+  }
+
+  if (customLines.length > 0) {
+    html += `<h2>📝 Additional</h2>${taskListOpen}`;
+    customLines.forEach(line => { html += taskItem(line.trim()); });
+    html += taskListClose;
+  }
+
+  html += `<br><p style="color:#8e8e93;font-size:0.85em">Generated ${new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</p>`;
+
+  const fullHtml = `<!DOCTYPE html><html><body>${html}</body></html>`;
+
+  // ── Write to clipboard & open Notes ─────────────────────
+  const openNotes = () => {
+    window.location.href = 'notes://';
+    showToast('📋 Copied — Notes is opening. Paste with ⌘V (Mac) or tap & hold → Paste (iPhone/iPad).', false);
+  };
+
+  try {
+    // Prefer rich HTML so Notes receives the task-list markup
+    const blob = new Blob([fullHtml], { type: 'text/html' });
+    navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })])
+      .then(openNotes)
+      .catch(() => navigator.clipboard.writeText(fullHtml).then(openNotes).catch(openNotes));
+  } catch(e) {
+    navigator.clipboard.writeText(fullHtml).then(openNotes).catch(openNotes);
+  }
+}
+</script>
+</body>
+</html>
