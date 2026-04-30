@@ -23,6 +23,7 @@ header {
 header h1 {
   margin: 0;
   color: #4aa3ff;
+  font-size: 28px;
 }
 
 .container {
@@ -37,12 +38,14 @@ header h1 {
   color: #9fb7d9;
   text-transform: uppercase;
   font-size: 14px;
+  letter-spacing: 1px;
 }
 
 .grid {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
+  justify-content: center;
 }
 
 .card {
@@ -50,21 +53,39 @@ header h1 {
   width: 260px;
   padding: 20px;
   background: #1b2130;
-  border-radius: 10px;
+  border-radius: 12px;
   text-decoration: none;
   color: white;
   border: 1px solid #2a2f3a;
-  transition: 0.2s;
+  transition: 0.2s ease;
+  text-align: center;
 }
 
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
   background: #2f80ed;
 }
 
 .icon {
-  font-size: 30px;
+  font-size: 34px;
   margin-bottom: 10px;
+}
+
+.card h2 {
+  margin: 10px 0 5px;
+}
+
+.card p {
+  font-size: 13px;
+  color: #c7cbd3;
+}
+
+footer {
+  text-align: center;
+  padding: 25px;
+  margin-top: 40px;
+  color: #777;
+  border-top: 1px solid #2a2f3a;
 }
 </style>
 </head>
@@ -78,41 +99,52 @@ header h1 {
 <div class="container">
 
   <div class="section-title">Your Tools</div>
+
   <div class="grid">
 
     <a class="card" href="case-notes-tool/">
       <div class="icon">📝</div>
       <h2>Case Note Generator</h2>
+      <p>Create structured, audit-ready DVOP case notes.</p>
     </a>
 
     <a class="card" href="client-dashboard-tool/">
       <div class="icon">📊</div>
       <h2>Client Dashboard</h2>
+      <p>Track clients, goals, and follow-ups.</p>
     </a>
 
     <a class="card" href="monthly-report-tool/">
       <div class="icon">📄</div>
       <h2>Monthly Report</h2>
+      <p>Generate VA Form 28-10289 reports.</p>
     </a>
 
     <a class="card" href="chore-planner/">
       <div class="icon">🧹</div>
       <h2>Chore Planner</h2>
+      <p>Build structured cleaning and task plans.</p>
     </a>
 
     <a class="card" href="Biblestudy-tool/">
       <div class="icon">📖</div>
       <h2>Bible Study</h2>
+      <p>Organize notes, lessons, and reflections.</p>
     </a>
 
     <a class="card" href="nvti-guide/">
       <div class="icon">✈️</div>
       <h2>NVTI Guide</h2>
+      <p>Access travel authorization instructions.</p>
     </a>
 
   </div>
 
 </div>
+
+<footer>
+  Built with HTML · Hosted on GitHub Pages
+</footer>
 
 </body>
 </html>
