@@ -1,1 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mario Productivity Tools</title>
 
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f1115;
+      color: #e8e8e8;
+    }
+
+    header {
+      padding: 24px;
+      border-bottom: 1px solid #2a2f3a;
+      background: #151922;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      color: #4aa3ff;
+      font-size: 28px;
+    }
+
+    header p {
+      color: #aeb6c2;
+      margin-top: 8px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
+    .section-title {
+      color: #9fb7d9;
+      margin-top: 35px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: #151922;
+      border: 1px solid #2a2f3a;
+      border-radius: 14px;
+      padding: 20px;
+      text-decoration: none;
+      color: white;
+      transition: 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #2f80ed;
+      background: #1b2130;
+    }
+
+    .icon {
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      color: #ffffff;
+    }
+
+    .card p {
+      color: #aeb6c2;
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    footer {
+      text-align: center;
+      color: #7f8794;
+      font-size: 12px;
+      padding: 30px;
+      border-top: 1px solid #2a2f3a;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Mario’s Productivity Tools</h1>
+    <p>Workflow tools for communication, case management, study, and daily execution.</p>
+  </header>
+
+  <main class="container">
+
+    <div class="section-title">Communication Tools</div>
+    <div class="grid">
+      <a class="card" href="email-tool/">
+        <div class="icon">📧</div>
+        <h2>Email Reply Generator</h2>
+        <p>Create professional email responses quickly using structured prompts and reusable reply formats.</p>
+      </a>
+    </div>
+
+    <div class="section-title">Spiritual / Study Tools</div>
+    <div class="grid">
+      <a class="card" href="Biblestudy-tool/">
+        <div class="icon">📖</div>
+        <h2>Bible Study Tool</h2>
+        <p>Organize Scripture notes, study thoughts, class notes, and reflection prompts in one place.</p>
+      </a>
+    </div>
+
+    <div class="section-title">Case Management Tools</div>
+    <div class="grid">
+      <a class="card" href="case-notes-tool/">
+        <div class="icon">📝</div>
+        <h2>Case Note Generator</h2>
+        <p>Draft structured, audit-ready case notes for veteran employment support workflows.</p>
+      </a>
+    </div>
+
+    <div class="section-title">Productivity Tools</div>
+    <div class="grid">
+      <a class="card" href="tracker-tool/">
+        <div class="icon">📊</div>
+        <h2>Daily Tracker</h2>
+        <p>Track tasks, priorities, follow-ups, and daily progress from one simple dashboard.</p>
+      </a>
+    </div>
+
+  </main>
+
+  <footer>
+    Mario Productivity Tools · Built with HTML, CSS, JavaScript, and GitHub Pages
+  </footer>
+
+</body>
+</html>
