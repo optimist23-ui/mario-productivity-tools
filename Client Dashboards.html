@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DVOP Case Management Dashboard | AJC Clarksville</title>
+<style>
+:root {
+  --green:   #1a7a4a;
+  --green-bg:#e6f4ed;
+  --amber:   #b06000;
+  --amber-bg:#fff3e0;
+  --red:     #c0392b;
+  --red-bg:  #fdecea;
+  --hold:    #5f6b7a;
+  --hold-bg: #f0f2f4;
+  --navy:    #1a2744;
+  --teal:    #0d7377;
+  --teal-lt: #e0f4f4;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; font-size: 14px; }
+
+/* ── NAV TABS ──────────────────────────────────────────────────── */
+.nav-bar { background: var(--navy); display: flex; align-items: center; gap: 0; padding: 0 20px; }
+.nav-bar h1 { color: #fff; font-size: 0.85rem; font-weight: 700; white-space: nowrap; padding-right: 24px; border-right: 1px solid rgba(255,255,255,0.15); margin-right: 12px; letter-spacing: 0.3px; }
+.tab-btn { padding: 14px 18px; color: rgba(255,255,255,0.6); font-size: 0.8rem; font-weight: 600; cursor: pointer; border: none; background: transparent; border-bottom: 3px solid transparent; transition: all 0.15s; white-space: nowrap; }
+.tab-btn:hover { color: rgba(255,255,255,0.9); }
+.tab-btn.active { color: #64ffda; border-bottom-color: #64ffda; }
+.json-btn { margin-left: auto; padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #64ffda; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.json-btn:hover { background: rgba(255,255,255,0.18); }
+
+/* ── PAGES ─────────────────────────────────────────────────────── */
+.page { display: none; padding: 20px; }
+.page.active { display: block; }
+
+/* ── HEADER CARD ───────────────────────────────────────────────── */
+.header-card {
+  background: linear-gradient(135deg, var(--navy) 0%, #1e3a5f 100%);
+  border-radius: 12px; padding: 20px 24px; margin-bottom: 18px;
+  display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+}
+.header-card .title { color: #fff; font-size: 1.15rem; font-weight: 700; }
+.header-card .sub { color: #8eaed0; font-size: 0.78rem; margin-top: 4px; }
+.header-card .sub span { color: #64ffda; }
+.stat-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.stat { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 16px; text-align: center; min-width: 90px; }
+.stat .n { font-size: 1.5rem; font-weight: 800; color: #64ffda; }
+.stat .l { font-size: 0.68rem; color: #8eaed0; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+/* ── TABLE CARD ────────────────────────────────────────────────── */
+.card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 18px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1.5px solid #edf0f7; flex-wrap: wrap; gap: 10px; }
+.card-title { font-weight: 700; font-size: 0.88rem; color: var(--navy); }
+.card-sub { font-size: 0.74rem; color: #8892b0; margin-top: 2px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: #555; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dot-green  { background: var(--green); }
+.dot-amber  { background: var(--amber); }
+.dot-red    { background: var(--red); }
+.dot-hold   { background: var(--hold); }
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 10px 14px; text-align: left; font-size: 0.72rem; font-weight: 700;
+  color: #8892b0; text-transform: uppercase; letter-spacing: 0.4px;
+  background: #fafbfd; border-bottom: 1.5px solid #edf0f7;
+}
+tbody tr { border-bottom: 1px solid #f2f4f8; transition: background 0.1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #f8f9fc; }
+td { padding: 11px 14px; vertical-align: middle; }
+.client-name { font-weight: 700; font-size: 0.85rem; }
+.state-id { font-size: 0.72rem; color: #8892b0; }
+
+.status-badge {
+  display: inline-block; padding: 4px 11px; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+}
+.status-employed     { background: var(--green-bg); color: var(--green); }
+.status-active       { background: var(--amber-bg); color: var(--amber); }
+.status-overdue      { background: var(--red-bg);   color: var(--red);   }
+.status-hold         { background: var(--hold-bg);  color: var(--hold);  }
+
+.days-cell { font-weight: 700; font-size: 0.88rem; }
+.days-ok     { color: var(--green); }
+.days-warn   { color: var(--amber); }
+.days-urgent { color: var(--red); }
+
+.date-cell { font-size: 0.8rem; }
+.overdue-flag { font-size: 0.68rem; color: var(--red); font-weight: 700; display: block; }
+
+.row-employed { background: rgba(26,122,74,0.03); }
+.row-overdue  { background: rgba(192,57,43,0.04); }
+
+/* ── CASE NOTE PREVIEW ─────────────────────────────────────────── */
+.note-preview { font-size:0.75rem; color:#555; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+.note-preview.empty { color:#c0c8d8; font-style:italic; }
+.note-preview:hover { color:var(--teal); text-decoration:underline; }
+
+/* ── NOTE DRAWER ───────────────────────────────────────────────── */
+.note-drawer-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:flex-end; justify-content:center; }
+.note-drawer-overlay.open { display:flex; }
+.note-drawer {
+  background:#fff; border-radius:16px 16px 0 0; width:100%; max-width:780px;
+  padding:24px 26px 28px; box-shadow:0 -8px 32px rgba(0,0,0,0.18);
+  max-height:75vh; display:flex; flex-direction:column; gap:14px;
+}
+.note-drawer-header { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.note-drawer-header h3 { font-size:0.95rem; font-weight:800; color:var(--navy); }
+.note-drawer-header .nd-sub { font-size:0.75rem; color:#8892b0; margin-top:2px; }
+.nd-close { background:#f0f2f5; border:none; border-radius:7px; padding:6px 13px; font-size:0.78rem; font-weight:700; cursor:pointer; color:#555; }
+.nd-close:hover { background:#e5e8ef; }
+textarea.note-full {
+  flex:1; min-height:200px; max-height:50vh; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  font-size:0.83rem; line-height:1.65; border:1.5px solid #dde1ea; border-radius:8px;
+  padding:13px 14px; resize:vertical; outline:none; color:#1a1a2e; background:#fafbfd;
+}
+textarea.note-full:focus { border-color:var(--teal); background:#fff; }
+.note-drawer-footer { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+.note-date-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.note-date-row label { font-size:0.72rem; font-weight:700; color:#5a6a80; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap; }
+.note-date-row input { border:1.5px solid #dde1ea; border-radius:7px; padding:6px 10px; font-size:0.82rem; outline:none; }
+.note-date-row input:focus { border-color:var(--teal); }
+
+/* ── ACTIONS ───────────────────────────────────────────────────── */
+.btn { padding: 7px 14px; border-radius: 7px; border: none; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.btn-primary { background: var(--navy); color: #64ffda; }
+.btn-primary:hover { background: #243558; }
+.btn-teal { background: var(--teal); color: #fff; }
+.btn-teal:hover { background: #0a5c60; }
+.btn-sm { padding: 5px 10px; font-size: 0.72rem; border-radius: 6px; }
+.btn-ghost { background: #f0f2f5; color: #555; border: 1px solid #dde1ea; }
+.btn-ghost:hover { background: #e5e8ef; }
+.btn-red { background: #fdecea; color: var(--red); border: 1px solid #f5c6c6; }
+
+/* ── JSON PANEL ────────────────────────────────────────────────── */
+.json-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55); z-index: 200;
+  align-items: flex-start; justify-content: center; padding: 30px 20px; overflow-y: auto;
+}
+.json-overlay.open { display: flex; }
+.json-modal {
+  background: #fff; border-radius: 14px; width: 760px; max-width: 100%;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.25); overflow: hidden;
+}
+.json-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; background: var(--navy); flex-wrap: wrap; gap: 10px;
+}
+.json-modal-header h2 { color: #fff; font-size: 0.95rem; }
+.json-modal-header p { color: #8eaed0; font-size: 0.75rem; margin-top: 2px; }
+.json-close { background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 1.2rem; cursor: pointer; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.json-tabs { display: flex; border-bottom: 1.5px solid #edf0f7; }
+.json-tab { padding: 11px 18px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: #8892b0; border-bottom: 3px solid transparent; transition: all 0.15s; }
+.json-tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+.json-body { padding: 20px; }
+.json-hint { background: var(--teal-lt); border-radius: 8px; padding: 10px 14px; font-size: 0.77rem; color: var(--teal); margin-bottom: 14px; line-height: 1.5; }
+.json-hint code { background: rgba(0,0,0,0.07); border-radius: 3px; padding: 1px 5px; font-family: monospace; font-size: 0.85em; }
+textarea.json-editor {
+  width: 100%; height: 340px; font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.78rem; border: 1.5px solid #dde1ea; border-radius: 8px;
+  padding: 14px; outline: none; resize: vertical; background: #fafbfd;
+  color: #1a1a2e; line-height: 1.6;
+}
+textarea.json-editor:focus { border-color: var(--teal); }
+.json-actions { display: flex; gap: 10px; margin-top: 14px; justify-content: flex-end; }
+.json-status { font-size: 0.78rem; padding: 6px 12px; border-radius: 6px; display: none; }
+.json-status.ok  { background: var(--green-bg); color: var(--green); display: block; }
+.json-status.err { background: var(--red-bg);   color: var(--red);   display: block; }
+
+/* ── CHECKLIST ─────────────────────────────────────────────────── */
+.checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 20px; }
+@media (max-width: 700px) { .checklist-grid { grid-template-columns: 1fr; } }
+.cl-group { background: #fafbfd; border-radius: 10px; padding: 16px; border: 1.5px solid #edf0f7; }
+.cl-group h3 { font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; color: var(--navy); }
+.cl-group.morning h3 { color: #e67e22; }
+.cl-group.midday  h3 { color: var(--teal); }
+.cl-group.eod     h3 { color: var(--navy); }
+.cl-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; cursor: pointer; }
+.cl-item input[type=checkbox] { margin-top: 2px; accent-color: var(--teal); width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+.cl-item label { font-size: 0.78rem; line-height: 1.45; color: #444; cursor: pointer; }
+.cl-item input:checked + label { text-decoration: line-through; color: #aaa; }
+.cl-tip { font-size: 0.73rem; color: #8892b0; font-style: italic; padding: 12px 20px; border-top: 1px solid #edf0f7; }
+.reset-btn-wrap { padding: 14px 20px 0; display: flex; gap: 10px; }
+
+/* ── RESOURCES ─────────────────────────────────────────────────── */
+.res-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 20px; }
+@media (max-width: 700px) { .res-grid { grid-template-columns: 1fr; } }
+.res-group h3 { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--teal); margin-bottom: 10px; }
+.res-link { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: #fafbfd; border: 1.5px solid #edf0f7; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; font-size: 0.8rem; color: var(--teal); font-weight: 600; text-decoration: none; }
+.res-link:hover { background: var(--teal-lt); border-color: var(--teal); }
+.res-link .icon { font-size: 1rem; }
+.res-note { font-size: 0.72rem; color: #8892b0; padding: 10px 20px 20px; font-style: italic; }
+
+/* ── ADD CLIENT MODAL ──────────────────────────────────────────── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 14px; width: 520px; max-width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.2); overflow: hidden; }
+.modal-header { padding: 18px 22px; background: var(--navy); display: flex; justify-content: space-between; align-items: center; }
+.modal-header h2 { color: #fff; font-size: 0.95rem; }
+.modal-body { padding: 22px; }
+.form-row { display: flex; gap: 12px; margin-bottom: 14px; }
+.form-group { flex: 1; }
+.form-group label { display: block; font-size: 0.78rem; font-weight: 700; color: #555; margin-bottom: 5px; }
+.form-control { width: 100%; padding: 9px 12px; border: 1.5px solid #dde1ea; border-radius: 7px; font-size: 0.83rem; outline: none; color: #1a1a2e; }
+.form-control:focus { border-color: var(--teal); }
+.modal-actions { padding: 14px 22px; border-top: 1px solid #edf0f7; display: flex; gap: 10px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <h1>📋 DVOP Dashboard</h1>
+  <button class="tab-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
+  <button class="tab-btn" onclick="showPage('checklist',this)">Daily Checklist</button>
+  <button class="tab-btn" onclick="showPage('resources',this)">Resources</button>
+  <button class="json-btn" onclick="openJson()">{ } Update via JSON</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- DASHBOARD PAGE                                                  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+
+  <div class="header-card">
+    <div>
+      <div class="title">DVOP Case Management Dashboard</div>
+      <div class="sub">Program: Jobs for Veterans State Grant (JVSG) &nbsp;·&nbsp; American Job Center – Clarksville<br>Case Manager: <span>Mario McMichael, DVOP</span> &nbsp;·&nbsp; Report Date: <span id="report-date"></span></div>
+    </div>
+    <div class="stat-row" id="stat-row"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Active Caseload</div>
+        <div class="card-sub">Days W/O Contact &gt; 14 = Follow-Up Required &nbsp;·&nbsp; Click a row to edit client</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div class="legend">
+          <span class="leg"><span class="dot dot-green"></span> Employed</span>
+          <span class="leg"><span class="dot dot-amber"></span> Active Job Search</span>
+          <span class="leg"><span class="dot dot-red"></span> Overdue / No Contact</span>
+          <span class="leg"><span class="dot dot-hold"></span> On Hold</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddClient()">+ Add Client</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Client Name</th>
+            <th>State ID</th>
+            <th>Enrolled</th>
+            <th>Last Contact</th>
+            <th>Status</th>
+            <th>Next Follow-Up</th>
+            <th>Days W/O Contact</th>
+            <th>Notes</th>
+            <th>Last Case Note</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="client-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- DAILY CHECKLIST PAGE                                            -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-checklist">
+  <div class="header-card">
+    <div>
+      <div class="title">Daily Workflow Checklist</div>
+      <div class="sub">Morning · Midday · End-of-Day — Check each box as completed</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="reset-btn-wrap">
+      <button class="btn btn-ghost btn-sm" onclick="resetChecklist()">↺ Reset All</button>
+    </div>
+    <div class="checklist-grid">
+      <div class="cl-group morning">
+        <h3>☀️ Morning</h3>
+        <div class="cl-item"><input type="checkbox" id="m1"><label for="m1">Open Case Tracker — review all clients due for contact today</label></div>
+        <div class="cl-item"><input type="checkbox" id="m2"><label for="m2">Check Email/Calendar for scheduled appointments or deadlines</label></div>
+        <div class="cl-item"><input type="checkbox" id="m3"><label for="m3">Print any blank hard copies needed (verification forms, activity logs)</label></div>
+        <div class="cl-item"><input type="checkbox" id="m4"><label for="m4">Scan QR code to open Employment Verification link — confirm access</label></div>
+        <div class="cl-item"><input type="checkbox" id="m5"><label for="m5">Review SharePoint/Cloud Notebook for overnight updates or supervisor notes</label></div>
+      </div>
+      <div class="cl-group midday">
+        <h3>🌤️ Midday</h3>
+        <div class="cl-item"><input type="checkbox" id="d1"><label for="d1">Complete all scheduled client phone contacts — log outcomes in Jobs4TN immediately</label></div>
+        <div class="cl-item"><input type="checkbox" id="d2"><label for="d2">Send follow-up emails for any missed contacts from the morning session</label></div>
+        <div class="cl-item"><input type="checkbox" id="d3"><label for="d3">Update activity log with this morning's monitoring results</label></div>
+        <div class="cl-item"><input type="checkbox" id="d4"><label for="d4">Cross-reference Job Search Links for new leads to share with active clients</label></div>
+        <div class="cl-item"><input type="checkbox" id="d5"><label for="d5">Flag any Priority clients needing same-day supervisor escalation</label></div>
+      </div>
+      <div class="cl-group eod">
+        <h3>🌙 End of Day</h3>
+        <div class="cl-item"><input type="checkbox" id="e1"><label for="e1">Finalize all contact entries in Case Tracker with date, time, and outcome</label></div>
+        <div class="cl-item"><input type="checkbox" id="e2"><label for="e2">Verify 30-day and 90-day follow-up dates are set for all new contacts</label></div>
+        <div class="cl-item"><input type="checkbox" id="e3"><label for="e3">Submit Employment Verification forms for any verified clients today</label></div>
+        <div class="cl-item"><input type="checkbox" id="e4"><label for="e4">Complete Progress Review Sheet for clients at the 30/90-day milestone</label></div>
+        <div class="cl-item"><input type="checkbox" id="e5"><label for="e5">Set reminders for tomorrow's contacts and any outstanding callbacks</label></div>
+      </div>
+    </div>
+    <p class="cl-tip">TIP: Print this checklist each morning. Check items as completed. Keep a copy in your case file for audit documentation purposes.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- RESOURCES PAGE                                                  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-resources">
+  <div class="header-card">
+    <div>
+      <div class="title">Resources & Quick Links</div>
+      <div class="sub">Work tools · Job boards · Recurring reports — Update URLs in the JSON editor</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="res-grid" id="res-grid"></div>
+    <p class="res-note">Placeholder URLs are marked — use the JSON editor (top right) to update with your actual SharePoint / Teams / internal tool URLs.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- JSON UPDATE PANEL                                               -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="json-overlay" id="json-overlay">
+  <div class="json-modal">
+    <div class="json-modal-header">
+      <div>
+        <h2>{ } Update via JSON</h2>
+        <p>Paste or edit JSON to update dashboard data — changes apply instantly</p>
+      </div>
+      <button class="json-close" onclick="closeJson()">✕</button>
+    </div>
+    <div class="json-tabs">
+      <button class="json-tab active" onclick="switchJsonTab('clients',this)">Clients</button>
+      <button class="json-tab" onclick="switchJsonTab('resources',this)">Resources</button>
+      <button class="json-tab" onclick="switchJsonTab('export',this)">Export Current</button>
+    </div>
+    <div class="json-body">
+      <div id="json-pane-clients">
+        <div class="json-hint">
+          Paste your <strong>dashboard_data.json</strong> file (full file works), a <code>{ "clients": [...] }</code> object, or a plain array <code>[...]</code>.<br>
+          Required fields per client: <code>name</code>, <code>status</code> · Optional: <code>stateId</code>, <code>enrolled</code>, <code>lastContact</code>, <code>notes</code><br>
+          Status values: <code>"Employed"</code> · <code>"Active Job Search"</code> · <code>"On Hold"</code> · <code>"Closed"</code> &nbsp;·&nbsp; Dates: <code>"YYYY-MM-DD"</code>
+        </div>
+        <textarea class="json-editor" id="json-clients-editor"></textarea>
+        <div id="json-clients-status" class="json-status"></div>
+        <div class="json-actions">
+          <button class="btn btn-ghost" onclick="closeJson()">Cancel</button>
+          <button class="btn btn-teal" onclick="applyClientsJson()">Apply Changes</button>
+        </div>
+      </div>
+      <div id="json-pane-resources" style="display:none;">
+        <div class="json-hint">
+          Update resource links. Each group has a <code>title</code> and <code>links</code> array. Each link has <code>label</code> and <code>url</code>.
+        </div>
+        <textarea class="json-editor" id="json-resources-editor"></textarea>
+        <div id="json-resources-status" class="json-status"></div>
+        <div class="json-actions">
+          <button class="btn btn-ghost" onclick="closeJson()">Cancel</button>
+          <button class="btn btn-teal" onclick="applyResourcesJson()">Apply Changes</button>
+        </div>
+      </div>
+      <div id="json-pane-export" style="display:none;">
+        <div class="json-hint">Current dashboard data — copy and save this as your backup or to share with another system.</div>
+        <textarea class="json-editor" id="json-export-editor" readonly></textarea>
+        <div class="json-actions">
+          <button class="btn btn-ghost" onclick="closeJson()">Close</button>
+          <button class="btn btn-teal" onclick="copyExport()">Copy to Clipboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- NOTE DRAWER ──────────────────────────────────────────────── -->
+<div class="note-drawer-overlay" id="note-drawer-overlay">
+  <div class="note-drawer">
+    <div class="note-drawer-header">
+      <div>
+        <h3 id="nd-client-name">Last Case Note</h3>
+        <div class="nd-sub" id="nd-client-sub"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-teal btn-sm" onclick="saveNoteDrawer()" style="font-size:0.76rem;">💾 Save Note</button>
+        <button class="nd-close" onclick="closeNoteDrawer()">✕ Close</button>
+      </div>
+    </div>
+    <div class="note-date-row">
+      <label>Note Date:</label>
+      <input type="date" id="nd-note-date"/>
+      <label style="margin-left:8px;">Note Type:</label>
+      <select id="nd-note-type" style="border:1.5px solid #dde1ea;border-radius:7px;padding:6px 10px;font-size:0.82rem;outline:none;cursor:pointer;">
+        <option value="Bi-Weekly Follow-Up">Bi-Weekly Follow-Up</option>
+        <option value="Outbound Call – Successful">Outbound Call – Successful</option>
+        <option value="Outbound Call – Unsuccessful">Outbound Call – Unsuccessful</option>
+        <option value="Check-In">Check-In</option>
+        <option value="30-Day Follow-Up">30-Day Follow-Up</option>
+        <option value="90-Day Follow-Up">90-Day Follow-Up</option>
+        <option value="Case Closure">Case Closure</option>
+        <option value="Employment Verification">Employment Verification</option>
+        <option value="General Case Management">General Case Management</option>
+      </select>
+    </div>
+    <textarea class="note-full" id="nd-note-text" placeholder="Paste or type the case note here. This will appear as a preview in the client row and is saved with the client record."></textarea>
+    <div class="note-drawer-footer">
+      <button class="btn btn-ghost btn-sm" onclick="clearNoteDrawer()">🗑 Clear Note</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyNoteDrawer()" id="nd-copy-btn">📋 Copy Note</button>
+      <button class="btn btn-teal" onclick="saveNoteDrawer()">💾 Save Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT CLIENT MODAL                                           -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="client-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="client-modal-title">Add Client</h2>
+      <button class="json-close" onclick="closeClientModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name (Last, First)</label>
+          <input class="form-control" id="cf-name" placeholder="Smith, John" />
+        </div>
+        <div class="form-group" style="max-width:140px">
+          <label>State ID</label>
+          <input class="form-control" id="cf-stateid" placeholder="1234567" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Enrolled Date</label>
+          <input class="form-control" id="cf-enrolled" type="date" />
+        </div>
+        <div class="form-group">
+          <label>Last Contact Date</label>
+          <input class="form-control" id="cf-lastcontact" type="date" />
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select class="form-control" id="cf-status">
+            <option value="Active Job Search">Active Job Search</option>
+            <option value="Employed">Employed</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Closed">Closed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Short Notes</label>
+          <input class="form-control" id="cf-notes" placeholder="Brief notes (e.g. Medical hold, Job offer pending)" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeClientModal()">Cancel</button>
+      <button class="btn btn-red btn-sm" id="delete-client-btn" onclick="deleteClient()" style="display:none">Delete</button>
+      <button class="btn btn-teal" onclick="saveClient()">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════
+let clients = [
+  { id:1,  name:"Bisignano, Joseph",  stateId:"5249966", enrolled:"2025-12-05", lastContact:"2026-03-03", status:"Active Job Search", notes:"", lastCaseNote:"", lastCaseNoteDate:"", lastCaseNoteType:"" },
+  { id:2,  name:"Dahal, Tulshi",      stateId:"328009",  enrolled:"2026-03-19", lastContact:"2026-04-20", status:"Active Job Search", notes:"", lastCaseNote:"", lastCaseNoteDate:"", lastCaseNoteType:"" },
+  { id:3,  name:"Daniels, Joshua",    stateId:"2876406", enrolled:"2025-12-03", lastContact:"2026-03-31", status:"Employed",          notes:"", lastCaseNote:"", lastCaseNoteDate:"", lastCaseNoteType:"" },
+  { id:4,  name:"Duanah, Solomon",    stateId:"500898",  enrolled:"2025-11-01", lastContact:"2026-04-20", status:"Active Job Search", notes:"", lastCaseNote:"", lastCaseNoteDate:"", lastCaseNoteType:"" },
+  { id:5,  name:"Lance, Alexander",   stateId:"316923",  enrolled:"2026-01-20", lastContact:"2026-04-20", status:"Active Job Search", notes:"", lastCaseNote:"", lastCaseNoteDate:"", lastCaseNoteType:"" },
+  { id:6,  name:"Vincent, Karen",     stateId:"23988",   enrolled:"2026-04-20", lastContact:"2026-04-20", status:"Active Job Search", notes:"", lastCaseNote:"", lastCaseNoteDate:"", lastCaseNoteType:"" },
+  { id:7,  name:"Weber Jr, Mark",     stateId:"292329",  enrolled:"2026-04-06", lastContact:"2026-04-20", status:"Employed",          notes:"", lastCaseNote:"", lastCaseNoteDate:"", lastCaseNoteType:"" },
+  { id:8,  name:"Wiedel, Chase",      stateId:"5326840", enrolled:"2026-03-12", lastContact:"2026-03-17", status:"On Hold",           notes:"Medical hold", lastCaseNote:"", lastCaseNoteDate:"", lastCaseNoteType:"Case Closure" },
+  { id:9,  name:"Williams, Fred",     stateId:"1264097", enrolled:"2026-02-26", lastContact:"2026-04-20", status:"Active Job Search", notes:"", lastCaseNote:"", lastCaseNoteDate:"", lastCaseNoteType:"" },
+];
+
+let resources = [
+  { title:"Work Tools", icon:"🛠️", links:[
+    { label:"Case Tracker",                    url:"#" },
+    { label:"Email / Calendar",                url:"#" },
+    { label:"Jobs4TN",                         url:"#" },
+    { label:"Chat Intake Prompt",              url:"#" },
+    { label:"SharePoint / Project / Monthly",  url:"#" },
+    { label:"Blank Hard Copies",               url:"#" },
+  ]},
+  { title:"Job Search Links", icon:"🔍", links:[
+    { label:"Vocational Job Lead Board",       url:"#" },
+    { label:"Mind Map",                        url:"#" },
+    { label:"Sway Account",                    url:"#" },
+    { label:"TN.Gov Job Board",                url:"#" },
+  ]},
+  { title:"Recurring Reports", icon:"📊", links:[
+    { label:"VR&E Monthly Reports",            url:"#" },
+    { label:"None Vet Report",                 url:"#" },
+    { label:"30-Day Follow-Up Checklist",      url:"#" },
+    { label:"90-Day Plan Template",            url:"#" },
+    { label:"Case Closure Form",               url:"#" },
+  ]},
+];
+
+let nextId = 10;
+let editingClientId = null;
+const TODAY = new Date('2026-04-27');
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+function daysDiff(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  return Math.floor((TODAY - d) / 86400000);
+}
+function fmtDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+function addDays(dateStr, n) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0,10);
+}
+
+// ══════════════════════════════════════════════════
+// RENDER DASHBOARD
+// ══════════════════════════════════════════════════
+function renderDashboard() {
+  // Report date
+  document.getElementById('report-date').textContent = TODAY.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});
+
+  // Stats
+  const active   = clients.filter(c => c.status !== 'Closed').length;
+  const employed = clients.filter(c => c.status === 'Employed').length;
+  const search   = clients.filter(c => c.status === 'Active Job Search').length;
+  const overdue  = clients.filter(c => daysDiff(c.lastContact) > 14 && c.status !== 'Employed' && c.status !== 'Closed').length;
+
+  document.getElementById('stat-row').innerHTML = `
+    <div class="stat"><div class="n">${active}</div><div class="l">Total Active</div></div>
+    <div class="stat"><div class="n" style="color:#64ffda">${employed}</div><div class="l">Employed</div></div>
+    <div class="stat"><div class="n" style="color:#ffd166">${search}</div><div class="l">Job Search</div></div>
+    <div class="stat"><div class="n" style="color:#ff6b6b">${overdue}</div><div class="l">Overdue</div></div>
+  `;
+
+  // Table
+  const tbody = document.getElementById('client-tbody');
+  tbody.innerHTML = '';
+
+  clients.forEach((c, i) => {
+    const days = daysDiff(c.lastContact);
+    const followUp = addDays(c.lastContact, 14);
+    const followUpDays = followUp ? daysDiff(followUp) : null;
+
+    const isOverdue  = days > 14 && c.status !== 'Employed' && c.status !== 'Closed';
+    const isEmployed = c.status === 'Employed';
+
+    let statusClass = 'status-hold';
+    if (c.status === 'Employed')          statusClass = 'status-employed';
+    else if (c.status === 'Active Job Search') statusClass = isOverdue ? 'status-overdue' : 'status-active';
+    else if (c.status === 'On Hold')      statusClass = 'status-hold';
+
+    let daysClass = 'days-ok';
+    if (days > 14 && !isEmployed)  daysClass = 'days-warn';
+    if (days > 21 && !isEmployed)  daysClass = 'days-urgent';
+
+    let followUpCell = fmtDate(followUp);
+    if (followUpDays !== null && followUpDays > 0 && !isEmployed) {
+      followUpCell += `<span class="overdue-flag">⚠ ${followUpDays}d overdue</span>`;
+    }
+
+    const rowClass = isEmployed ? 'row-employed' : (isOverdue ? 'row-overdue' : '');
+
+    const tr = document.createElement('tr');
+    tr.className = rowClass;
+    tr.style.cursor = 'pointer';
+    tr.onclick = () => openEditClient(c.id);
+    tr.innerHTML = `
+      <td style="color:#8892b0;font-size:0.8rem">${i+1}</td>
+      <td><div class="client-name">${c.name}</div></td>
+      <td><span class="state-id">${c.stateId}</span></td>
+      <td class="date-cell">${fmtDate(c.enrolled)}</td>
+      <td class="date-cell">${fmtDate(c.lastContact)}</td>
+      <td><span class="status-badge ${statusClass}">${c.status}</span></td>
+      <td class="date-cell">${followUpCell}</td>
+      <td><span class="days-cell ${daysClass}">${days !== null ? days+'d' : '—'}</span></td>
+      <td style="font-size:0.77rem;color:#8892b0;max-width:160px">${c.notes || ''}</td>
+      <td>
+        ${c.lastCaseNote
+          ? `<span class="note-preview" title="${c.lastCaseNoteType || ''} · ${c.lastCaseNoteDate || ''}" onclick="event.stopPropagation();openNoteDrawer(${c.id})">${c.lastCaseNote.slice(0,60)}${c.lastCaseNote.length>60?'…':''}</span>`
+          : `<span class="note-preview empty" onclick="event.stopPropagation();openNoteDrawer(${c.id})">📝 Add note</span>`
+        }
+      </td>
+      <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openEditClient(${c.id})">Edit</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// RENDER RESOURCES
+// ══════════════════════════════════════════════════
+function renderResources() {
+  const grid = document.getElementById('res-grid');
+  grid.innerHTML = '';
+  resources.forEach(group => {
+    const div = document.createElement('div');
+    div.className = 'res-group';
+    div.innerHTML = `<h3>${group.icon} ${group.title}</h3>` +
+      group.links.map(l =>
+        `<a class="res-link" href="${l.url}" target="_blank" rel="noopener">
+          <span class="icon">🔗</span> ${l.label}
+        </a>`
+      ).join('');
+    grid.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// PAGE / TAB SWITCHING
+// ══════════════════════════════════════════════════
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════
+// CLIENT MODAL
+// ══════════════════════════════════════════════════
+function openAddClient() {
+  editingClientId = null;
+  document.getElementById('client-modal-title').textContent = 'Add Client';
+  document.getElementById('cf-name').value = '';
+  document.getElementById('cf-stateid').value = '';
+  document.getElementById('cf-enrolled').value = '';
+  document.getElementById('cf-lastcontact').value = '';
+  document.getElementById('cf-status').value = 'Active Job Search';
+  document.getElementById('cf-notes').value = '';
+  document.getElementById('delete-client-btn').style.display = 'none';
+  document.getElementById('client-modal').classList.add('open');
+}
+
+function openEditClient(id) {
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  editingClientId = id;
+  document.getElementById('client-modal-title').textContent = 'Edit Client — ' + c.name;
+  document.getElementById('cf-name').value = c.name;
+  document.getElementById('cf-stateid').value = c.stateId;
+  document.getElementById('cf-enrolled').value = c.enrolled || '';
+  document.getElementById('cf-lastcontact').value = c.lastContact || '';
+  document.getElementById('cf-status').value = c.status;
+  document.getElementById('cf-notes').value = c.notes || '';
+  document.getElementById('delete-client-btn').style.display = 'inline-block';
+  document.getElementById('client-modal').classList.add('open');
+}
+
+function closeClientModal() {
+  document.getElementById('client-modal').classList.remove('open');
+}
+
+function saveClient() {
+  const name      = document.getElementById('cf-name').value.trim();
+  const stateId   = document.getElementById('cf-stateid').value.trim();
+  const enrolled  = document.getElementById('cf-enrolled').value;
+  const lastContact = document.getElementById('cf-lastcontact').value;
+  const status    = document.getElementById('cf-status').value;
+  const notes     = document.getElementById('cf-notes').value.trim();
+  if (!name) { alert('Name is required.'); return; }
+
+  if (editingClientId) {
+    const c = clients.find(x => x.id === editingClientId);
+    Object.assign(c, { name, stateId, enrolled, lastContact, status, notes });
+  } else {
+    clients.push({ id: nextId++, name, stateId, enrolled, lastContact, status, notes });
+  }
+  closeClientModal();
+  renderDashboard();
+}
+
+function deleteClient() {
+  if (!confirm('Remove this client from the dashboard?')) return;
+  clients = clients.filter(c => c.id !== editingClientId);
+  closeClientModal();
+  renderDashboard();
+}
+
+// ══════════════════════════════════════════════════
+// JSON PANEL
+// ══════════════════════════════════════════════════
+let currentJsonTab = 'clients';
+
+function openJson() {
+  switchJsonTab('clients', document.querySelector('.json-tab'));
+  populateJsonEditors();
+  document.getElementById('json-overlay').classList.add('open');
+}
+function closeJson() {
+  document.getElementById('json-overlay').classList.remove('open');
+}
+
+function switchJsonTab(name, btn) {
+  currentJsonTab = name;
+  document.querySelectorAll('.json-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['clients','resources','export'].forEach(p => {
+    document.getElementById('json-pane-'+p).style.display = p === name ? 'block' : 'none';
+  });
+  if (name === 'export') populateExport();
+}
+
+function populateJsonEditors() {
+  document.getElementById('json-clients-editor').value =
+    JSON.stringify(clients.map(({id,name,stateId,enrolled,lastContact,status,notes,lastCaseNote,lastCaseNoteDate,lastCaseNoteType}) =>
+      ({id,name,stateId,enrolled,lastContact,status,notes,lastCaseNote,lastCaseNoteDate,lastCaseNoteType})
+    ), null, 2);
+  document.getElementById('json-resources-editor').value =
+    JSON.stringify(resources, null, 2);
+  clearStatus('json-clients-status');
+  clearStatus('json-resources-status');
+}
+
+function populateExport() {
+  document.getElementById('json-export-editor').value = JSON.stringify({
+    exportDate: new Date().toISOString().slice(0,10),
+    caseManager: "Mario McMichael, DVOP",
+    clients: clients,
+    resources: resources,
+  }, null, 2);
+}
+
+function applyClientsJson() {
+  const el = document.getElementById('json-clients-editor');
+  const st = document.getElementById('json-clients-status');
+  try {
+    const parsed = JSON.parse(el.value);
+
+    // Accept: plain array, { clients: [...] }, or full dashboard_data.json object
+    let arr;
+    if (Array.isArray(parsed)) {
+      arr = parsed;
+    } else if (parsed && Array.isArray(parsed.clients)) {
+      arr = parsed.clients;
+      // Also apply resources if present in the same paste
+      if (Array.isArray(parsed.resources)) {
+        resources = parsed.resources;
+        renderResources();
+      }
+    } else {
+      throw new Error('Paste either a clients array [ ] or the full dashboard_data.json file.');
+    }
+
+    // Strip instruction/template objects (keys starting with _)
+    arr = arr.filter(c => c && typeof c === 'object' && !Object.keys(c)[0]?.startsWith('_'));
+
+    arr.forEach((c,i) => {
+      if (!c.name)   throw new Error(`Client ${i+1}: missing "name" field`);
+      if (!c.status) throw new Error(`Client ${i+1}: missing "status" field`);
+    });
+
+    clients = arr.map((c,i) => ({
+      id:               c.id || (nextId + i),
+      name:             c.name,
+      stateId:          c.stateId || '',
+      enrolled:         c.enrolled || '',
+      lastContact:      c.lastContact || '',
+      status:           c.status,
+      notes:            c.notes || '',
+      lastCaseNote:     c.lastCaseNote || '',
+      lastCaseNoteDate: c.lastCaseNoteDate || '',
+      lastCaseNoteType: c.lastCaseNoteType || '',
+    }));
+
+    if (clients.length) nextId = Math.max(...clients.map(c => c.id)) + 1;
+    st.className = 'json-status ok';
+    st.textContent = `✓ Applied — ${clients.length} client${clients.length !== 1 ? 's' : ''} loaded`;
+    renderDashboard();
+    setTimeout(() => { clearStatus('json-clients-status'); closeJson(); }, 1400);
+  } catch(e) {
+    st.className = 'json-status err';
+    st.textContent = '✕ ' + e.message;
+  }
+}
+
+function applyResourcesJson() {
+  const el = document.getElementById('json-resources-editor');
+  const st = document.getElementById('json-resources-status');
+  try {
+    const parsed = JSON.parse(el.value);
+
+    // Accept: plain array or { resources: [...] } or full file object
+    let arr;
+    if (Array.isArray(parsed)) {
+      arr = parsed;
+    } else if (parsed && Array.isArray(parsed.resources)) {
+      arr = parsed.resources;
+    } else {
+      throw new Error('Paste either a resources array [ ] or the full dashboard_data.json file.');
+    }
+
+    resources = arr;
+    st.className = 'json-status ok';
+    st.textContent = '✓ Resources updated';
+    renderResources();
+    setTimeout(() => { clearStatus('json-resources-status'); closeJson(); }, 1400);
+  } catch(e) {
+    st.className = 'json-status err';
+    st.textContent = '✕ ' + e.message;
+  }
+}
+
+function copyExport() {
+  const txt = document.getElementById('json-export-editor').value;
+  navigator.clipboard.writeText(txt).then(() => alert('Copied to clipboard!')).catch(() => {
+    document.getElementById('json-export-editor').select();
+    document.execCommand('copy');
+    alert('Copied!');
+  });
+}
+
+function clearStatus(id) {
+  const el = document.getElementById(id);
+  el.className = 'json-status';
+  el.textContent = '';
+}
+
+// ══════════════════════════════════════════════════
+// NOTE DRAWER
+// ══════════════════════════════════════════════════
+let noteDrawerClientId = null;
+
+function openNoteDrawer(id) {
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  noteDrawerClientId = id;
+
+  document.getElementById('nd-client-name').textContent = c.name;
+  document.getElementById('nd-client-sub').textContent  = 'State ID: ' + (c.stateId || '—') + '  ·  Status: ' + c.status;
+  document.getElementById('nd-note-date').value  = c.lastCaseNoteDate || new Date().toISOString().slice(0,10);
+  document.getElementById('nd-note-type').value  = c.lastCaseNoteType || 'Bi-Weekly Follow-Up';
+  document.getElementById('nd-note-text').value  = c.lastCaseNote || '';
+
+  document.getElementById('note-drawer-overlay').classList.add('open');
+  document.getElementById('nd-note-text').focus();
+}
+
+function closeNoteDrawer() {
+  document.getElementById('note-drawer-overlay').classList.remove('open');
+  noteDrawerClientId = null;
+}
+
+function saveNoteDrawer() {
+  const c = clients.find(x => x.id === noteDrawerClientId);
+  if (!c) return;
+  c.lastCaseNote     = document.getElementById('nd-note-text').value.trim();
+  c.lastCaseNoteDate = document.getElementById('nd-note-date').value;
+  c.lastCaseNoteType = document.getElementById('nd-note-type').value;
+  renderDashboard();
+  closeNoteDrawer();
+}
+
+function copyNoteDrawer() {
+  const txt = document.getElementById('nd-note-text').value;
+  if (!txt) { alert('Nothing to copy — the note is empty.'); return; }
+  navigator.clipboard.writeText(txt)
+    .then(() => {
+      const btn = document.getElementById('nd-copy-btn');
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = orig; }, 1800);
+    })
+    .catch(() => {
+      document.getElementById('nd-note-text').select();
+      document.execCommand('copy');
+      alert('Copied!');
+    });
+}
+
+function clearNoteDrawer() {
+  if (!confirm('Clear this case note? This cannot be undone.')) return;
+  document.getElementById('nd-note-text').value = '';
+  document.getElementById('nd-note-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('nd-note-type').value = 'Bi-Weekly Follow-Up';
+}
+
+// Close note drawer on backdrop click
+document.getElementById('note-drawer-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeNoteDrawer();
+});
+
+// ══════════════════════════════════════════════════
+// CHECKLIST
+// ══════════════════════════════════════════════════
+function resetChecklist() {
+  document.querySelectorAll('.cl-item input[type=checkbox]').forEach(cb => cb.checked = false);
+}
+
+// Close overlays on backdrop click
+document.getElementById('json-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeJson();
+});
+document.getElementById('client-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeClientModal();
+});
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+renderDashboard();
+renderResources();
+</script>
+</body>
+</html>
