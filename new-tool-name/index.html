@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Planner</title>
+<style>
+  :root {
+    --primary: #1a1a2e;
+    --accent: #c9a84c;
+    --accent-light: #f0d080;
+    --bg: #f7f5f0;
+    --card: #ffffff;
+    --border: #e0d9cc;
+    --text: #1a1a2e;
+    --text-muted: #7a7065;
+    --morning: #fff7e6;
+    --morning-accent: #e8a020;
+    --night: #eef0ff;
+    --night-accent: #4a5be8;
+    --success: #2d8a4e;
+    --danger: #c0392b;
+    --tab-active: #1a1a2e;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ─── TOP HEADER ─── */
+  .top-bar {
+    background: var(--primary);
+    color: white;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+  }
+
+  .top-bar h1 {
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .top-bar .date-display {
+    font-size: 0.85rem;
+    color: #aaa;
+    letter-spacing: 1px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .print-btn {
+    background: var(--accent);
+    color: var(--primary);
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+
+  .print-btn:hover { background: var(--accent-light); }
+
+  /* ─── TAB NAV ─── */
+  .tab-nav {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    padding: 0 40px;
+    overflow-x: auto;
+    gap: 0;
+    position: sticky;
+    top: 64px;
+    z-index: 99;
+  }
+
+  .tab-nav button {
+    background: none;
+    border: none;
+    padding: 16px 22px;
+    font-size: 0.78rem;
+    font-family: 'Georgia', serif;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .tab-nav button:hover { color: var(--text); }
+  .tab-nav button.active {
+    color: var(--primary);
+    border-bottom-color: var(--accent);
+    font-weight: bold;
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+  }
+
+  .card-body { padding: 20px 24px; }
+
+  /* ─── EDITABLE FIELDS ─── */
+  [contenteditable] {
+    outline: none;
+    min-height: 24px;
+    transition: background 0.15s;
+    border-radius: 3px;
+  }
+  [contenteditable]:focus {
+    background: #fffde8;
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  [contenteditable]:empty::before {
+    content: attr(data-placeholder);
+    color: #ccc;
+    font-style: italic;
+  }
+
+  /* ─── TASK ROWS ─── */
+  .task-list { list-style: none; }
+
+  .task-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0ece4;
+  }
+  .task-row:last-child { border-bottom: none; }
+
+  .task-row input[type="checkbox"] {
+    margin-top: 4px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .task-row input[type="checkbox"]:checked + .task-text {
+    text-decoration: line-through;
+    color: #aaa;
+  }
+
+  .task-text {
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    min-height: 22px;
+  }
+
+  .task-priority {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .p-high { background: #fde8e8; color: #c0392b; }
+  .p-med  { background: #fff3cd; color: #856404; }
+  .p-low  { background: #d1ecf1; color: #0c5460; }
+
+  .add-row-btn {
+    background: none;
+    border: 1px dashed var(--border);
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    margin-top: 10px;
+    font-family: 'Georgia', serif;
+    transition: all 0.2s;
+  }
+  .add-row-btn:hover { background: #f9f6f0; border-color: var(--accent); color: var(--text); }
+
+  /* ─── TWO-COLUMN GRID ─── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ─── MORNING / NIGHT CARDS ─── */
+  .morning-card .card-header { background: var(--morning); }
+  .morning-card .card-icon   { background: #ffd966; }
+  .night-card .card-header   { background: var(--night); }
+  .night-card .card-icon     { background: #b0b8f8; }
+
+  /* ─── WEEK GRID ─── */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 900px) { .week-grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 600px) { .week-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .day-col {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .day-col-header {
+    background: var(--primary);
+    color: white;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .day-col-header .day-name {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .day-col-header .day-num {
+    font-size: 1.5rem;
+    font-weight: 300;
+    line-height: 1.2;
+  }
+
+  .day-col-body {
+    padding: 10px;
+    min-height: 180px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+
+  .day-col.today .day-col-header { background: var(--accent); color: var(--primary); }
+  .day-col.today .day-col-header .day-name { color: var(--primary); }
+
+  /* ─── TIME BLOCKS (Day view) ─── */
+  .time-block-list { list-style: none; }
+
+  .time-block {
+    display: flex;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0ece4;
+    align-items: flex-start;
+  }
+
+  .time-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+    min-width: 50px;
+    padding-top: 3px;
+    flex-shrink: 0;
+  }
+
+  .time-entry {
+    flex: 1;
+    font-size: 0.9rem;
+  }
+
+  /* ─── KEY DATES ─── */
+  .date-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 120px;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0ece4;
+    align-items: center;
+  }
+
+  .date-input {
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: 'Georgia', serif;
+    background: white;
+    color: var(--text);
+    width: 100%;
+  }
+
+  .date-input:focus { outline: none; box-shadow: 0 0 0 2px var(--accent); border-color: var(--accent); }
+
+  .date-badge {
+    display: inline-block;
+    background: var(--primary);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* ─── PASSWORDS ─── */
+  .password-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 44px;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0ece4;
+    align-items: center;
+  }
+
+  .pass-input {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: 'Georgia', serif;
+    background: white;
+    color: var(--text);
+    width: 100%;
+  }
+
+  .pass-input:focus { outline: none; box-shadow: 0 0 0 2px var(--accent); border-color: var(--accent); }
+
+  .pass-input.masked { -webkit-text-security: disc; letter-spacing: 2px; }
+
+  .toggle-pass {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    width: 36px;
+    height: 34px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .toggle-pass:hover { background: #e8e2d8; }
+
+  .pass-label { color: var(--text-muted); font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+
+  /* ─── BRAINSTORM ─── */
+  .brainstorm-area {
+    width: 100%;
+    min-height: 220px;
+    padding: 16px;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    border: none;
+    outline: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3Cpattern id='lines' width='100%25' height='30' patternUnits='userSpaceOnUse'%3E%3Cline x1='0' y1='29' x2='100%25' y2='29' stroke='%23e8e2d4' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect fill='url(%23lines)' width='100%25' height='100%25'/%3E%3C/svg%3E");
+    resize: vertical;
+    font-family: 'Georgia', serif;
+    color: var(--text);
+  }
+
+  /* ─── SECTION LABEL ─── */
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+
+  /* ─── RECURRING TASKS ─── */
+  .recurring-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0ece4;
+  }
+
+  .recurring-days {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .day-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: white;
+    font-size: 0.62rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-weight: bold;
+    text-transform: uppercase;
+    user-select: none;
+    transition: all 0.15s;
+  }
+
+  .day-dot.active {
+    background: var(--primary);
+    color: var(--accent);
+    border-color: var(--primary);
+  }
+
+  /* ─── FOLLOW-UP ─── */
+  .followup-row {
+    display: grid;
+    grid-template-columns: 1fr 130px 90px;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0ece4;
+    align-items: center;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  .s-pending   { background: #fff3cd; color: #856404; }
+  .s-done      { background: #d4edda; color: #155724; }
+  .s-overdue   { background: #fde8e8; color: #c0392b; }
+  .s-waiting   { background: #d1ecf1; color: #0c5460; }
+
+  /* ─── PRINT ─── */
+  @media print {
+    body { background: white; }
+    .top-bar, .tab-nav, .print-btn, .add-row-btn { display: none !important; }
+    .tab-content { display: block !important; }
+    .container { padding: 0; max-width: 100%; }
+    .card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+    .tab-content:not(.active) { display: none !important; }
+    [contenteditable]:focus { background: transparent; box-shadow: none; }
+  }
+
+  /* ─── ANIMATIONS ─── */
+  .tab-content.active { animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ─── PAGE TITLE ─── */
+  .page-title {
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .page-title h2 {
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: var(--primary);
+    letter-spacing: 1px;
+  }
+
+  .page-title p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <h1>✦ Master Planner</h1>
+  <span class="date-display" id="live-date"></span>
+  <button class="print-btn" onclick="window.print()">⎙ Print</button>
+</div>
+
+<!-- TAB NAVIGATION -->
+<div class="tab-nav">
+  <button class="active" onclick="showTab('day')">☀ Day View</button>
+  <button onclick="showTab('week')">📅 Week View</button>
+  <button onclick="showTab('recurring')">↻ Recurring</button>
+  <button onclick="showTab('pending')">⏳ Pending</button>
+  <button onclick="showTab('followup')">↪ Follow-Up</button>
+  <button onclick="showTab('brainstorm')">💡 Brainstorm</button>
+  <button onclick="showTab('keydates')">📌 Key Dates</button>
+  <button onclick="showTab('passwords')">🔑 Passwords</button>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  TAB 1 — DAY VIEW                          -->
+<!-- ══════════════════════════════════════════ -->
+<div id="tab-day" class="tab-content active">
+  <div class="container">
+
+    <div class="page-title">
+      <h2 id="day-title">Today's Planner</h2>
+      <p>Type directly into any field — or print and write by hand.</p>
+    </div>
+
+    <!-- TOP ROW: Intentions + Priority -->
+    <div class="two-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#ffe0b2;">🎯</div>
+          <span class="card-title">Today's Focus &amp; Intention</span>
+        </div>
+        <div class="card-body">
+          <div contenteditable="true" data-placeholder="What is the single most important thing to accomplish today?" style="min-height:60px; font-size:1.05rem; line-height:1.7;"></div>
+          <div style="margin-top:16px; font-size:0.75rem; letter-spacing:1px; color:var(--text-muted); text-transform:uppercase;">Affirmation / Mindset</div>
+          <div contenteditable="true" data-placeholder="Write a short affirmation or intention for today..." style="min-height:44px; margin-top:8px; font-style:italic;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#e1f5e1;">✅</div>
+          <span class="card-title">Top 3 Priorities</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="priorities-list">
+            <li class="task-row">
+              <input type="checkbox">
+              <div class="task-text" contenteditable="true" data-placeholder="Priority #1 (Most important)"></div>
+              <span class="task-priority p-high">High</span>
+            </li>
+            <li class="task-row">
+              <input type="checkbox">
+              <div class="task-text" contenteditable="true" data-placeholder="Priority #2"></div>
+              <span class="task-priority p-med">Med</span>
+            </li>
+            <li class="task-row">
+              <input type="checkbox">
+              <div class="task-text" contenteditable="true" data-placeholder="Priority #3"></div>
+              <span class="task-priority p-low">Low</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MORNING & NIGHT TASKS -->
+    <div class="two-col">
+
+      <div class="card morning-card">
+        <div class="card-header">
+          <div class="card-icon">🌅</div>
+          <span class="card-title">Morning Tasks</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="morning-list">
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Morning task..."></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Morning task..."></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Morning task..."></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Morning task..."></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Morning task..."></div></li>
+          </ul>
+          <button class="add-row-btn" onclick="addTask('morning-list', true)">+ Add morning task</button>
+        </div>
+      </div>
+
+      <div class="card night-card">
+        <div class="card-header">
+          <div class="card-icon">🌙</div>
+          <span class="card-title">Night Tasks / Wind-Down</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="night-list">
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Night task or routine..."></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Night task or routine..."></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Night task or routine..."></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Night task or routine..."></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Night task or routine..."></div></li>
+          </ul>
+          <button class="add-row-btn" onclick="addTask('night-list', true)">+ Add night task</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SCHEDULE BLOCK -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#e8f4fd;">🕐</div>
+        <span class="card-title">Daily Schedule</span>
+      </div>
+      <div class="card-body">
+        <ul class="time-block-list" id="schedule-list">
+          <!-- Generated by JS -->
+        </ul>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW: Notes + Gratitude -->
+    <div class="two-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#f0e6ff;">📝</div>
+          <span class="card-title">Notes &amp; Reminders</span>
+        </div>
+        <div class="card-body">
+          <div contenteditable="true" data-placeholder="Quick notes, reminders, things to remember today..." style="min-height:120px; font-size:0.92rem; line-height:1.8;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#fce4ec;">🙏</div>
+          <span class="card-title">End-of-Day Reflection</span>
+        </div>
+        <div class="card-body">
+          <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">Grateful for</div>
+          <div contenteditable="true" data-placeholder="3 things you're grateful for..." style="min-height:44px; margin-bottom:16px;"></div>
+          <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">Win of the day</div>
+          <div contenteditable="true" data-placeholder="What went well today?" style="min-height:44px;"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  TAB 2 — WEEK VIEW                         -->
+<!-- ══════════════════════════════════════════ -->
+<div id="tab-week" class="tab-content">
+  <div class="container">
+
+    <div class="page-title">
+      <h2>Week at a Glance</h2>
+      <p id="week-range">Loading...</p>
+    </div>
+
+    <div class="week-grid" id="week-grid">
+      <!-- Generated by JS -->
+    </div>
+
+    <!-- Weekly Goals -->
+    <div class="card" style="margin-top:24px;">
+      <div class="card-header">
+        <div class="card-icon" style="background:#e1f5e1;">🏆</div>
+        <span class="card-title">Weekly Goals</span>
+      </div>
+      <div class="card-body">
+        <ul class="task-list" id="weekly-goals">
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Weekly goal #1..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Weekly goal #2..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Weekly goal #3..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Weekly goal #4..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Weekly goal #5..."></div></li>
+        </ul>
+        <button class="add-row-btn" onclick="addTask('weekly-goals', true)">+ Add weekly goal</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#fff7e6;">📊</div>
+          <span class="card-title">Weekly Review Notes</span>
+        </div>
+        <div class="card-body">
+          <div contenteditable="true" data-placeholder="What worked? What didn't? What will you change next week?" style="min-height:120px; line-height:1.8;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#eef0ff;">📈</div>
+          <span class="card-title">Habits Tracker</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="habits-list">
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Habit (e.g. Exercise, 8 glasses of water...)"></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Habit..."></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Habit..."></div></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Habit..."></div></li>
+          </ul>
+          <button class="add-row-btn" onclick="addTask('habits-list', true)">+ Add habit</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  TAB 3 — RECURRING TASKS                  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="tab-recurring" class="tab-content">
+  <div class="container">
+
+    <div class="page-title">
+      <h2>Recurring Tasks</h2>
+      <p>Tasks that repeat on a schedule — click the day circles to mark which days they apply.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#e8f8e8;">↻</div>
+        <span class="card-title">Daily / Weekly Recurring Tasks</span>
+      </div>
+      <div class="card-body">
+
+        <div style="display:grid; grid-template-columns: 1fr 160px 80px 80px; gap:10px; padding-bottom:10px; border-bottom:2px solid var(--border); margin-bottom:8px;">
+          <span style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted);">Task</span>
+          <span style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted);">Days (M T W T F S S)</span>
+          <span style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted);">Time</span>
+          <span style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted);">Done</span>
+        </div>
+
+        <ul class="task-list" id="recurring-list">
+          <!-- Rows generated by JS -->
+        </ul>
+        <button class="add-row-btn" onclick="addRecurringRow()">+ Add recurring task</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#fff0e6;">🗓</div>
+        <span class="card-title">Monthly Recurring Tasks</span>
+      </div>
+      <div class="card-body">
+        <ul class="task-list" id="monthly-list">
+          <li class="task-row">
+            <input type="checkbox">
+            <div class="task-text" contenteditable="true" data-placeholder="Monthly task (e.g. Pay bills, Team review...)"></div>
+            <input type="date" class="date-input" style="max-width:140px; font-size:0.8rem;">
+          </li>
+          <li class="task-row">
+            <input type="checkbox">
+            <div class="task-text" contenteditable="true" data-placeholder="Monthly task..."></div>
+            <input type="date" class="date-input" style="max-width:140px; font-size:0.8rem;">
+          </li>
+          <li class="task-row">
+            <input type="checkbox">
+            <div class="task-text" contenteditable="true" data-placeholder="Monthly task..."></div>
+            <input type="date" class="date-input" style="max-width:140px; font-size:0.8rem;">
+          </li>
+        </ul>
+        <button class="add-row-btn" onclick="addMonthlyTask()">+ Add monthly task</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  TAB 4 — PENDING TASKS                    -->
+<!-- ══════════════════════════════════════════ -->
+<div id="tab-pending" class="tab-content">
+  <div class="container">
+
+    <div class="page-title">
+      <h2>Pending Tasks</h2>
+      <p>Everything not yet started — assign a category and deadline to keep it organized.</p>
+    </div>
+
+    <div class="two-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#fde8e8;">🔴</div>
+          <span class="card-title">Urgent / High Priority</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="pending-urgent">
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Urgent pending task..."></div><input type="date" class="date-input" style="max-width:130px; font-size:0.78rem;"></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Urgent pending task..."></div><input type="date" class="date-input" style="max-width:130px; font-size:0.78rem;"></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Urgent pending task..."></div><input type="date" class="date-input" style="max-width:130px; font-size:0.78rem;"></li>
+          </ul>
+          <button class="add-row-btn" onclick="addPendingTask('pending-urgent')">+ Add urgent task</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#fff3cd;">🟡</div>
+          <span class="card-title">Medium Priority</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="pending-medium">
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Medium priority task..."></div><input type="date" class="date-input" style="max-width:130px; font-size:0.78rem;"></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Medium priority task..."></div><input type="date" class="date-input" style="max-width:130px; font-size:0.78rem;"></li>
+            <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Medium priority task..."></div><input type="date" class="date-input" style="max-width:130px; font-size:0.78rem;"></li>
+          </ul>
+          <button class="add-row-btn" onclick="addPendingTask('pending-medium')">+ Add medium task</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#d1ecf1;">🔵</div>
+        <span class="card-title">Backlog / Someday</span>
+      </div>
+      <div class="card-body">
+        <ul class="task-list" id="pending-backlog">
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Someday / maybe task..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Someday / maybe task..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Someday / maybe task..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Someday / maybe task..."></div></li>
+        </ul>
+        <button class="add-row-btn" onclick="addTask('pending-backlog', true)">+ Add to backlog</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  TAB 5 — FOLLOW-UP                        -->
+<!-- ══════════════════════════════════════════ -->
+<div id="tab-followup" class="tab-content">
+  <div class="container">
+
+    <div class="page-title">
+      <h2>Follow-Up Tasks</h2>
+      <p>Things waiting on someone else or needing a nudge.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#e8f0fe;">↪</div>
+        <span class="card-title">Follow-Up Tracker</span>
+      </div>
+      <div class="card-body">
+
+        <div style="display:grid; grid-template-columns: 1fr 160px 100px; gap:10px; padding-bottom:10px; border-bottom:2px solid var(--border); margin-bottom:8px;">
+          <span style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted);">Task / Person / Notes</span>
+          <span style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted);">Follow-Up Date</span>
+          <span style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted);">Status</span>
+        </div>
+
+        <ul class="task-list" id="followup-list">
+          <!-- Generated by JS -->
+        </ul>
+        <button class="add-row-btn" onclick="addFollowUpRow()">+ Add follow-up item</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#fce4ec;">📞</div>
+        <span class="card-title">Calls / Emails to Return</span>
+      </div>
+      <div class="card-body">
+        <ul class="task-list" id="calls-list">
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Call / email back: name, context..."></div><input type="date" class="date-input" style="max-width:130px;font-size:0.78rem;"></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Call / email back..."></div><input type="date" class="date-input" style="max-width:130px;font-size:0.78rem;"></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Call / email back..."></div><input type="date" class="date-input" style="max-width:130px;font-size:0.78rem;"></li>
+        </ul>
+        <button class="add-row-btn" onclick="addCallTask()">+ Add call / email</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  TAB 6 — BRAINSTORM                       -->
+<!-- ══════════════════════════════════════════ -->
+<div id="tab-brainstorm" class="tab-content">
+  <div class="container">
+
+    <div class="page-title">
+      <h2>Brainstorm Space</h2>
+      <p>Dump every idea here — no filter, no judgment. Sort it out later.</p>
+    </div>
+
+    <div class="two-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#fff9c4;">💡</div>
+          <span class="card-title">Free Brainstorm</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <textarea class="brainstorm-area" placeholder="Write anything here — ideas, fragments, questions, connections..."></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#f3e5f5;">🧠</div>
+          <span class="card-title">Ideas to Develop</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="ideas-list">
+            <li class="task-row"><div style="font-size:1.1rem; margin-right:4px;">◇</div><div class="task-text" contenteditable="true" data-placeholder="Idea to explore further..."></div></li>
+            <li class="task-row"><div style="font-size:1.1rem; margin-right:4px;">◇</div><div class="task-text" contenteditable="true" data-placeholder="Idea to explore further..."></div></li>
+            <li class="task-row"><div style="font-size:1.1rem; margin-right:4px;">◇</div><div class="task-text" contenteditable="true" data-placeholder="Idea to explore further..."></div></li>
+            <li class="task-row"><div style="font-size:1.1rem; margin-right:4px;">◇</div><div class="task-text" contenteditable="true" data-placeholder="Idea to explore further..."></div></li>
+          </ul>
+          <button class="add-row-btn" onclick="addIdeaRow()">+ Add idea</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="two-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#e8f5e9;">✓</div>
+          <span class="card-title">Pros / Opportunities</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <textarea class="brainstorm-area" placeholder="What's working? What's possible? Opportunities..." style="min-height:150px;"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#fde8e8;">✗</div>
+          <span class="card-title">Cons / Obstacles</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <textarea class="brainstorm-area" placeholder="What's blocking you? What needs solving?" style="min-height:150px;"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#e0f7fa;">🔗</div>
+        <span class="card-title">Links &amp; Resources to Check</span>
+      </div>
+      <div class="card-body">
+        <ul class="task-list" id="links-list">
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="URL or resource to review..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="URL or resource to review..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="URL or resource to review..."></div></li>
+        </ul>
+        <button class="add-row-btn" onclick="addTask('links-list', false)">+ Add link</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  TAB 7 — KEY DATES                        -->
+<!-- ══════════════════════════════════════════ -->
+<div id="tab-keydates" class="tab-content">
+  <div class="container">
+
+    <div class="page-title">
+      <h2>Key Dates</h2>
+      <p>Deadlines, birthdays, events, and anything date-critical.</p>
+    </div>
+
+    <div class="two-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#fce4ec;">📅</div>
+          <span class="card-title">Upcoming Deadlines</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="deadlines-list">
+            <!-- Generated by JS -->
+          </ul>
+          <button class="add-row-btn" onclick="addDateRow('deadlines-list')">+ Add deadline</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#fff9c4;">🎉</div>
+          <span class="card-title">Birthdays &amp; Celebrations</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="birthdays-list">
+            <!-- Generated by JS -->
+          </ul>
+          <button class="add-row-btn" onclick="addDateRow('birthdays-list')">+ Add birthday</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="two-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#e8f0fe;">🏢</div>
+          <span class="card-title">Work / Professional Events</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="work-events-list">
+            <!-- Generated by JS -->
+          </ul>
+          <button class="add-row-btn" onclick="addDateRow('work-events-list')">+ Add work event</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#e8f8e8;">🌿</div>
+          <span class="card-title">Personal Events</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="personal-events-list">
+            <!-- Generated by JS -->
+          </ul>
+          <button class="add-row-btn" onclick="addDateRow('personal-events-list')">+ Add personal event</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#f3e5f5;">📣</div>
+        <span class="card-title">Reminders to Set</span>
+      </div>
+      <div class="card-body">
+        <ul class="task-list" id="reminders-list">
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Reminder: what + when..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Reminder..."></div></li>
+          <li class="task-row"><input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Reminder..."></div></li>
+        </ul>
+        <button class="add-row-btn" onclick="addTask('reminders-list', true)">+ Add reminder</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  TAB 8 — PASSWORDS                        -->
+<!-- ══════════════════════════════════════════ -->
+<div id="tab-passwords" class="tab-content">
+  <div class="container">
+
+    <div class="page-title">
+      <h2>Key Passwords &amp; Access</h2>
+      <p>Stored locally in this file only — never uploaded or shared. Consider a dedicated password manager for production use.</p>
+    </div>
+
+    <div style="background:#fff7e6; border:1px solid #e8a020; border-radius:8px; padding:14px 20px; margin-bottom:24px; font-size:0.85rem; color:#7a5200;">
+      ⚠ <strong>Security Note:</strong> This planner is stored as a local HTML file. This section is for convenience reference only. For sensitive accounts, use a dedicated password manager.
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#e8f4fd;">🔑</div>
+        <span class="card-title">Accounts &amp; Credentials</span>
+      </div>
+      <div class="card-body">
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 44px; gap:10px; padding-bottom:10px; border-bottom:2px solid var(--border); margin-bottom:8px;">
+          <span style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted);">Service / Account</span>
+          <span style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted);">Username / Email</span>
+          <span style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted);">Password / PIN</span>
+          <span></span>
+        </div>
+
+        <div id="passwords-list">
+          <!-- Generated by JS -->
+        </div>
+        <button class="add-row-btn" onclick="addPasswordRow()">+ Add credential</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#e8f8e8;">📶</div>
+          <span class="card-title">Wi-Fi Networks</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="wifi-list">
+            <li class="task-row">
+              <div class="task-text" contenteditable="true" data-placeholder="Network name (SSID)..."></div>
+              <div contenteditable="true" data-placeholder="Password" style="max-width:160px; background:#f7f5f0; padding:4px 8px; border-radius:4px; font-size:0.85rem;"></div>
+            </li>
+            <li class="task-row">
+              <div class="task-text" contenteditable="true" data-placeholder="Network name (SSID)..."></div>
+              <div contenteditable="true" data-placeholder="Password" style="max-width:160px; background:#f7f5f0; padding:4px 8px; border-radius:4px; font-size:0.85rem;"></div>
+            </li>
+          </ul>
+          <button class="add-row-btn" onclick="addWifiRow()">+ Add Wi-Fi</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:#fce4ec;">🔐</div>
+          <span class="card-title">PIN Codes &amp; Combos</span>
+        </div>
+        <div class="card-body">
+          <ul class="task-list" id="pins-list">
+            <li class="task-row">
+              <div class="task-text" contenteditable="true" data-placeholder="What (e.g. safe, locker, door)..."></div>
+              <div contenteditable="true" data-placeholder="Code" style="max-width:120px; background:#f7f5f0; padding:4px 8px; border-radius:4px; font-size:0.85rem; letter-spacing:3px;"></div>
+            </li>
+            <li class="task-row">
+              <div class="task-text" contenteditable="true" data-placeholder="What..."></div>
+              <div contenteditable="true" data-placeholder="Code" style="max-width:120px; background:#f7f5f0; padding:4px 8px; border-radius:4px; font-size:0.85rem; letter-spacing:3px;"></div>
+            </li>
+          </ul>
+          <button class="add-row-btn" onclick="addPinRow()">+ Add PIN</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  JAVASCRIPT                               -->
+<!-- ══════════════════════════════════════════ -->
+<script>
+// ─── DATE SETUP ─────────────────────────────
+const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS_SHORT = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+const DAY_LETTERS = ['M','T','W','T','F','S','S'];
+
+function today() { return new Date(); }
+
+function formatDate(d) {
+  return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+function getWeekDates(d) {
+  const day = d.getDay(); // 0=Sun
+  const monday = new Date(d); monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const dt = new Date(monday); dt.setDate(monday.getDate() + i);
+    dates.push(dt);
+  }
+  return dates;
+}
+
+// ─── INIT ────────────────────────────────────
+window.onload = function() {
+  const now = today();
+
+  // Live date in header
+  document.getElementById('live-date').textContent = formatDate(now);
+  document.getElementById('day-title').textContent = `${DAYS[now.getDay()]}'s Planner — ${MONTHS[now.getMonth()]} ${now.getDate()}`;
+
+  buildSchedule();
+  buildWeekGrid();
+  buildRecurringRows();
+  buildFollowUpRows();
+  buildDateRows('deadlines-list', 4);
+  buildDateRows('birthdays-list', 4);
+  buildDateRows('work-events-list', 3);
+  buildDateRows('personal-events-list', 3);
+  buildPasswordRows(5);
+};
+
+// ─── TABS ────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ─── SCHEDULE ────────────────────────────────
+function buildSchedule() {
+  const times = ['5:00 AM','6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM',
+                 '12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM',
+                 '7:00 PM','8:00 PM','9:00 PM','10:00 PM'];
+  const list = document.getElementById('schedule-list');
+  const nowHour = today().getHours();
+  times.forEach(t => {
+    const h = parseInt(t);
+    const isPM = t.includes('PM');
+    const h24 = isPM ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
+    const isCurrent = (h24 === nowHour);
+    const li = document.createElement('li');
+    li.className = 'time-block';
+    if (isCurrent) li.style.background = '#fffde8';
+    li.innerHTML = `
+      <span class="time-label">${t}</span>
+      <div class="time-entry" contenteditable="true" data-placeholder="—"></div>
+    `;
+    list.appendChild(li);
+  });
+}
+
+// ─── WEEK GRID ───────────────────────────────
+function buildWeekGrid() {
+  const now = today();
+  const dates = getWeekDates(now);
+  const grid = document.getElementById('week-grid');
+  const range = document.getElementById('week-range');
+
+  range.textContent = `${MONTHS[dates[0].getMonth()]} ${dates[0].getDate()} – ${MONTHS[dates[6].getMonth()]} ${dates[6].getDate()}, ${dates[6].getFullYear()}`;
+
+  dates.forEach(d => {
+    const isToday = (d.toDateString() === now.toDateString());
+    const col = document.createElement('div');
+    col.className = 'day-col' + (isToday ? ' today' : '');
+    col.innerHTML = `
+      <div class="day-col-header">
+        <div class="day-name">${DAYS[d.getDay()].substring(0,3)}</div>
+        <div class="day-num">${d.getDate()}</div>
+      </div>
+      <div class="day-col-body" contenteditable="true" data-placeholder="Tasks..."></div>
+    `;
+    grid.appendChild(col);
+  });
+}
+
+// ─── RECURRING TASKS ─────────────────────────
+function buildRecurringRows() {
+  const defaults = [
+    'Morning routine', 'Check email', 'Exercise', 'Team standup', 'Review tasks', 'Wind-down routine'
+  ];
+  const list = document.getElementById('recurring-list');
+  defaults.forEach(t => {
+    list.appendChild(makeRecurringRow(t));
+  });
+}
+
+function makeRecurringRow(text) {
+  const li = document.createElement('li');
+  li.style.cssText = 'display:grid; grid-template-columns: 1fr 160px 80px 80px; gap:10px; padding:10px 0; border-bottom:1px solid #f0ece4; align-items:center;';
+  const daysHtml = DAY_LETTERS.map((l, i) =>
+    `<div class="day-dot" onclick="this.classList.toggle('active')">${l}</div>`
+  ).join('');
+  li.innerHTML = `
+    <div contenteditable="true" style="font-size:0.9rem; padding:2px 4px;" data-placeholder="Task name...">${text}</div>
+    <div class="recurring-days" style="justify-content:space-between;">${daysHtml}</div>
+    <input type="time" class="date-input" style="font-size:0.8rem; padding:4px 6px;">
+    <div style="text-align:center;"><input type="checkbox" style="width:18px; height:18px; accent-color:var(--primary);"></div>
+  `;
+  return li;
+}
+
+function addRecurringRow() {
+  const list = document.getElementById('recurring-list');
+  list.appendChild(makeRecurringRow(''));
+}
+
+function addMonthlyTask() {
+  const list = document.getElementById('monthly-list');
+  const li = document.createElement('li');
+  li.className = 'task-row';
+  li.innerHTML = `<input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Monthly task..."></div><input type="date" class="date-input" style="max-width:140px; font-size:0.8rem;">`;
+  list.appendChild(li);
+}
+
+// ─── FOLLOW-UP ───────────────────────────────
+function buildFollowUpRows() {
+  const list = document.getElementById('followup-list');
+  for (let i = 0; i < 6; i++) list.appendChild(makeFollowUpRow());
+}
+
+function makeFollowUpRow() {
+  const statuses = ['s-pending','s-waiting','s-done','s-overdue'];
+  const labels   = ['Pending','Waiting','Done','Overdue'];
+  const li = document.createElement('li');
+  li.className = 'followup-row';
+  const optHtml = labels.map((l, i) => `<option value="${statuses[i]}">${l}</option>`).join('');
+  li.innerHTML = `
+    <div contenteditable="true" data-placeholder="Who / what to follow up on..." style="font-size:0.9rem; padding:2px 4px;"></div>
+    <input type="date" class="date-input" style="font-size:0.82rem;">
+    <select class="date-input" style="font-size:0.78rem; cursor:pointer;" onchange="updateStatusBadge(this)">${optHtml}</select>
+  `;
+  return li;
+}
+
+function addFollowUpRow() {
+  document.getElementById('followup-list').appendChild(makeFollowUpRow());
+}
+
+function addCallTask() {
+  const list = document.getElementById('calls-list');
+  const li = document.createElement('li');
+  li.className = 'task-row';
+  li.innerHTML = `<input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Call / email back..."></div><input type="date" class="date-input" style="max-width:130px;font-size:0.78rem;">`;
+  list.appendChild(li);
+}
+
+// ─── KEY DATES ───────────────────────────────
+function buildDateRows(listId, count) {
+  const list = document.getElementById(listId);
+  for (let i = 0; i < count; i++) list.appendChild(makeDateRow());
+}
+
+function makeDateRow() {
+  const li = document.createElement('li');
+  li.className = 'task-row';
+  li.innerHTML = `
+    <input type="checkbox">
+    <div class="task-text" contenteditable="true" data-placeholder="Event / deadline description..."></div>
+    <input type="date" class="date-input" style="max-width:140px; font-size:0.82rem;">
+  `;
+  return li;
+}
+
+function addDateRow(listId) {
+  document.getElementById(listId).appendChild(makeDateRow());
+}
+
+// ─── PASSWORDS ───────────────────────────────
+function buildPasswordRows(count) {
+  const container = document.getElementById('passwords-list');
+  for (let i = 0; i < count; i++) container.appendChild(makePasswordRow());
+}
+
+function makePasswordRow() {
+  const div = document.createElement('div');
+  div.className = 'password-row';
+  div.innerHTML = `
+    <input class="pass-input" type="text" placeholder="Service (e.g. Gmail, Netflix)">
+    <input class="pass-input" type="text" placeholder="Username or email">
+    <input class="pass-input masked" type="text" placeholder="••••••••">
+    <button class="toggle-pass" onclick="togglePass(this)" title="Show/hide">👁</button>
+  `;
+  return div;
+}
+
+function addPasswordRow() {
+  document.getElementById('passwords-list').appendChild(makePasswordRow());
+}
+
+function togglePass(btn) {
+  const inp = btn.previousElementSibling;
+  inp.classList.toggle('masked');
+  btn.textContent = inp.classList.contains('masked') ? '👁' : '🙈';
+}
+
+function addWifiRow() {
+  const list = document.getElementById('wifi-list');
+  const li = document.createElement('li');
+  li.className = 'task-row';
+  li.innerHTML = `
+    <div class="task-text" contenteditable="true" data-placeholder="Network name..."></div>
+    <div contenteditable="true" data-placeholder="Password" style="max-width:160px; background:#f7f5f0; padding:4px 8px; border-radius:4px; font-size:0.85rem;"></div>
+  `;
+  list.appendChild(li);
+}
+
+function addPinRow() {
+  const list = document.getElementById('pins-list');
+  const li = document.createElement('li');
+  li.className = 'task-row';
+  li.innerHTML = `
+    <div class="task-text" contenteditable="true" data-placeholder="What..."></div>
+    <div contenteditable="true" data-placeholder="Code" style="max-width:120px; background:#f7f5f0; padding:4px 8px; border-radius:4px; font-size:0.85rem; letter-spacing:3px;"></div>
+  `;
+  list.appendChild(li);
+}
+
+// ─── GENERIC TASK ────────────────────────────
+function addTask(listId, hasCheckbox) {
+  const list = document.getElementById(listId);
+  const li = document.createElement('li');
+  li.className = 'task-row';
+  li.innerHTML = `
+    ${hasCheckbox ? '<input type="checkbox">' : '<div style="font-size:1.1rem; margin-right:4px;">◇</div>'}
+    <div class="task-text" contenteditable="true" data-placeholder="New item..."></div>
+  `;
+  list.appendChild(li);
+  li.querySelector('[contenteditable]').focus();
+}
+
+function addIdeaRow() {
+  const list = document.getElementById('ideas-list');
+  const li = document.createElement('li');
+  li.className = 'task-row';
+  li.innerHTML = `<div style="font-size:1.1rem; margin-right:4px;">◇</div><div class="task-text" contenteditable="true" data-placeholder="Idea..."></div>`;
+  list.appendChild(li);
+  li.querySelector('[contenteditable]').focus();
+}
+
+function addPendingTask(listId) {
+  const list = document.getElementById(listId);
+  const li = document.createElement('li');
+  li.className = 'task-row';
+  li.innerHTML = `<input type="checkbox"><div class="task-text" contenteditable="true" data-placeholder="Task..."></div><input type="date" class="date-input" style="max-width:130px; font-size:0.78rem;">`;
+  list.appendChild(li);
+  li.querySelector('[contenteditable]').focus();
+}
+</script>
+
+</body>
+</html>
